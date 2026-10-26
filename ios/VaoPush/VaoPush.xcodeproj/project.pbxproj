@@ -1,0 +1,1014 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		925B9999308CC3B300A0FAC1 /* VaoPushCore in Frameworks */ = {isa = PBXBuildFile; productRef = 925B9998308CC3B300A0FAC1 /* VaoPushCore */; };
+		925B999B308CC3C400A0FAC1 /* VaoPushCore in Frameworks */ = {isa = PBXBuildFile; productRef = 925B999A308CC3C400A0FAC1 /* VaoPushCore */; };
+		925B999D308CC3D700A0FAC1 /* VaoPushCore in Frameworks */ = {isa = PBXBuildFile; productRef = 925B999C308CC3D700A0FAC1 /* VaoPushCore */; };
+		92926B07308CC2C800361D4A /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 92926B06308CC2C800361D4A /* WidgetKit.framework */; };
+		92926B09308CC2C800361D4A /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 92926B08308CC2C800361D4A /* SwiftUI.framework */; };
+		92926B16308CC2C900361D4A /* VaoPushWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 92926B04308CC2C800361D4A /* VaoPushWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		92926B27308CC2CF00361D4A /* VaoPushNotificationService.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 92926B20308CC2CF00361D4A /* VaoPushNotificationService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		92926AE6308CC2AC00361D4A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 92926AD0308CC2AB00361D4A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 92926AD7308CC2AB00361D4A;
+			remoteInfo = VaoPush;
+		};
+		92926AF0308CC2AC00361D4A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 92926AD0308CC2AB00361D4A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 92926AD7308CC2AB00361D4A;
+			remoteInfo = VaoPush;
+		};
+		92926B14308CC2C900361D4A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 92926AD0308CC2AB00361D4A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 92926B03308CC2C800361D4A;
+			remoteInfo = VaoPushWidgetExtension;
+		};
+		92926B25308CC2CF00361D4A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 92926AD0308CC2AB00361D4A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 92926B1F308CC2CF00361D4A;
+			remoteInfo = VaoPushNotificationService;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		92926B1B308CC2C900361D4A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				92926B27308CC2CF00361D4A /* VaoPushNotificationService.appex in Embed Foundation Extensions */,
+				92926B16308CC2C900361D4A /* VaoPushWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		92926AD8308CC2AB00361D4A /* VaoPush.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VaoPush.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		92926AE5308CC2AC00361D4A /* VaoPushTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VaoPushTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		92926AEF308CC2AC00361D4A /* VaoPushUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VaoPushUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		92926B04308CC2C800361D4A /* VaoPushWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VaoPushWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		92926B06308CC2C800361D4A /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
+		92926B08308CC2C800361D4A /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
+		92926B20308CC2CF00361D4A /* VaoPushNotificationService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VaoPushNotificationService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		92926B2C308CC2EB00361D4A /* VaoPushWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VaoPushWidgetExtension.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		925B99A5308D0B2400A0FAC1 /* Exceptions for "VaoPush" folder in "VaoPush" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 92926AD7308CC2AB00361D4A /* VaoPush */;
+		};
+		92926B17308CC2C900361D4A /* Exceptions for "VaoPushWidget" folder in "VaoPushWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 92926B03308CC2C800361D4A /* VaoPushWidgetExtension */;
+		};
+		92926B28308CC2CF00361D4A /* Exceptions for "VaoPushNotificationService" folder in "VaoPushNotificationService" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 92926B1F308CC2CF00361D4A /* VaoPushNotificationService */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		92926ADA308CC2AB00361D4A /* VaoPush */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				925B99A5308D0B2400A0FAC1 /* Exceptions for "VaoPush" folder in "VaoPush" target */,
+			);
+			path = VaoPush;
+			sourceTree = "<group>";
+		};
+		92926AE8308CC2AC00361D4A /* VaoPushTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VaoPushTests;
+			sourceTree = "<group>";
+		};
+		92926AF2308CC2AC00361D4A /* VaoPushUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VaoPushUITests;
+			sourceTree = "<group>";
+		};
+		92926B0A308CC2C800361D4A /* VaoPushWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				92926B17308CC2C900361D4A /* Exceptions for "VaoPushWidget" folder in "VaoPushWidgetExtension" target */,
+			);
+			path = VaoPushWidget;
+			sourceTree = "<group>";
+		};
+		92926B21308CC2CF00361D4A /* VaoPushNotificationService */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				92926B28308CC2CF00361D4A /* Exceptions for "VaoPushNotificationService" folder in "VaoPushNotificationService" target */,
+			);
+			path = VaoPushNotificationService;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		92926AD5308CC2AB00361D4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				925B999D308CC3D700A0FAC1 /* VaoPushCore in Frameworks */,
+			);
+		};
+		92926AE2308CC2AC00361D4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		92926AEC308CC2AC00361D4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		92926B01308CC2C800361D4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				92926B09308CC2C800361D4A /* SwiftUI.framework in Frameworks */,
+				925B9999308CC3B300A0FAC1 /* VaoPushCore in Frameworks */,
+				92926B07308CC2C800361D4A /* WidgetKit.framework in Frameworks */,
+			);
+		};
+		92926B1D308CC2CF00361D4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				925B999B308CC3C400A0FAC1 /* VaoPushCore in Frameworks */,
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		92926ACF308CC2AB00361D4A = {
+			isa = PBXGroup;
+			children = (
+				92926B2C308CC2EB00361D4A /* VaoPushWidgetExtension.entitlements */,
+				92926ADA308CC2AB00361D4A /* VaoPush */,
+				92926AE8308CC2AC00361D4A /* VaoPushTests */,
+				92926AF2308CC2AC00361D4A /* VaoPushUITests */,
+				92926B0A308CC2C800361D4A /* VaoPushWidget */,
+				92926B21308CC2CF00361D4A /* VaoPushNotificationService */,
+				92926B05308CC2C800361D4A /* Frameworks */,
+				92926AD9308CC2AB00361D4A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		92926AD9308CC2AB00361D4A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				92926AD8308CC2AB00361D4A /* VaoPush.app */,
+				92926AE5308CC2AC00361D4A /* VaoPushTests.xctest */,
+				92926AEF308CC2AC00361D4A /* VaoPushUITests.xctest */,
+				92926B04308CC2C800361D4A /* VaoPushWidgetExtension.appex */,
+				92926B20308CC2CF00361D4A /* VaoPushNotificationService.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		92926B05308CC2C800361D4A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				92926B06308CC2C800361D4A /* WidgetKit.framework */,
+				92926B08308CC2C800361D4A /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		92926AD7308CC2AB00361D4A /* VaoPush */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 92926AF7308CC2AC00361D4A /* Build configuration list for PBXNativeTarget "VaoPush" */;
+			buildPhases = (
+				92926AD4308CC2AB00361D4A /* Sources */,
+				92926AD5308CC2AB00361D4A /* Frameworks */,
+				92926AD6308CC2AB00361D4A /* Resources */,
+				92926B1B308CC2C900361D4A /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				92926B15308CC2C900361D4A /* PBXTargetDependency */,
+				92926B26308CC2CF00361D4A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				92926ADA308CC2AB00361D4A /* VaoPush */,
+			);
+			name = VaoPush;
+			packageProductDependencies = (
+				925B999C308CC3D700A0FAC1 /* VaoPushCore */,
+			);
+			productName = VaoPush;
+			productReference = 92926AD8308CC2AB00361D4A /* VaoPush.app */;
+			productType = "com.apple.product-type.application";
+		};
+		92926AE4308CC2AC00361D4A /* VaoPushTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 92926AFA308CC2AC00361D4A /* Build configuration list for PBXNativeTarget "VaoPushTests" */;
+			buildPhases = (
+				92926AE1308CC2AC00361D4A /* Sources */,
+				92926AE2308CC2AC00361D4A /* Frameworks */,
+				92926AE3308CC2AC00361D4A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				92926AE7308CC2AC00361D4A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				92926AE8308CC2AC00361D4A /* VaoPushTests */,
+			);
+			name = VaoPushTests;
+			productName = VaoPushTests;
+			productReference = 92926AE5308CC2AC00361D4A /* VaoPushTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		92926AEE308CC2AC00361D4A /* VaoPushUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 92926AFD308CC2AC00361D4A /* Build configuration list for PBXNativeTarget "VaoPushUITests" */;
+			buildPhases = (
+				92926AEB308CC2AC00361D4A /* Sources */,
+				92926AEC308CC2AC00361D4A /* Frameworks */,
+				92926AED308CC2AC00361D4A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				92926AF1308CC2AC00361D4A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				92926AF2308CC2AC00361D4A /* VaoPushUITests */,
+			);
+			name = VaoPushUITests;
+			productName = VaoPushUITests;
+			productReference = 92926AEF308CC2AC00361D4A /* VaoPushUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		92926B03308CC2C800361D4A /* VaoPushWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 92926B18308CC2C900361D4A /* Build configuration list for PBXNativeTarget "VaoPushWidgetExtension" */;
+			buildPhases = (
+				92926B00308CC2C800361D4A /* Sources */,
+				92926B01308CC2C800361D4A /* Frameworks */,
+				92926B02308CC2C800361D4A /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				92926B0A308CC2C800361D4A /* VaoPushWidget */,
+			);
+			name = VaoPushWidgetExtension;
+			packageProductDependencies = (
+				925B9998308CC3B300A0FAC1 /* VaoPushCore */,
+			);
+			productName = VaoPushWidgetExtension;
+			productReference = 92926B04308CC2C800361D4A /* VaoPushWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		92926B1F308CC2CF00361D4A /* VaoPushNotificationService */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 92926B29308CC2CF00361D4A /* Build configuration list for PBXNativeTarget "VaoPushNotificationService" */;
+			buildPhases = (
+				92926B1C308CC2CF00361D4A /* Sources */,
+				92926B1D308CC2CF00361D4A /* Frameworks */,
+				92926B1E308CC2CF00361D4A /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				92926B21308CC2CF00361D4A /* VaoPushNotificationService */,
+			);
+			name = VaoPushNotificationService;
+			packageProductDependencies = (
+				925B999A308CC3C400A0FAC1 /* VaoPushCore */,
+			);
+			productName = VaoPushNotificationService;
+			productReference = 92926B20308CC2CF00361D4A /* VaoPushNotificationService.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		92926AD0308CC2AB00361D4A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2710;
+				LastUpgradeCheck = 2710;
+				TargetAttributes = {
+					92926AD7308CC2AB00361D4A = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					92926AE4308CC2AC00361D4A = {
+						CreatedOnToolsVersion = 27.1;
+						TestTargetID = 92926AD7308CC2AB00361D4A;
+					};
+					92926AEE308CC2AC00361D4A = {
+						CreatedOnToolsVersion = 27.1;
+						TestTargetID = 92926AD7308CC2AB00361D4A;
+					};
+					92926B03308CC2C800361D4A = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					92926B1F308CC2CF00361D4A = {
+						CreatedOnToolsVersion = 27.1;
+					};
+				};
+			};
+			buildConfigurationList = 92926AD3308CC2AB00361D4A /* Build configuration list for PBXProject "VaoPush" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = 92926ACF308CC2AB00361D4A;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				925B9997308CC39500A0FAC1 /* XCLocalSwiftPackageReference "../VaoPushCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 92926AD9308CC2AB00361D4A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				92926AD7308CC2AB00361D4A /* VaoPush */,
+				92926AE4308CC2AC00361D4A /* VaoPushTests */,
+				92926AEE308CC2AC00361D4A /* VaoPushUITests */,
+				92926B03308CC2C800361D4A /* VaoPushWidgetExtension */,
+				92926B1F308CC2CF00361D4A /* VaoPushNotificationService */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		92926AD6308CC2AB00361D4A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		92926AE3308CC2AC00361D4A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		92926AED308CC2AC00361D4A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		92926B02308CC2C800361D4A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		92926B1E308CC2CF00361D4A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		92926AD4308CC2AB00361D4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		92926AE1308CC2AC00361D4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		92926AEB308CC2AC00361D4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		92926B00308CC2C800361D4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		92926B1C308CC2CF00361D4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		92926AE7308CC2AC00361D4A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 92926AD7308CC2AB00361D4A /* VaoPush */;
+			targetProxy = 92926AE6308CC2AC00361D4A /* PBXContainerItemProxy */;
+		};
+		92926AF1308CC2AC00361D4A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 92926AD7308CC2AB00361D4A /* VaoPush */;
+			targetProxy = 92926AF0308CC2AC00361D4A /* PBXContainerItemProxy */;
+		};
+		92926B15308CC2C900361D4A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 92926B03308CC2C800361D4A /* VaoPushWidgetExtension */;
+			targetProxy = 92926B14308CC2C900361D4A /* PBXContainerItemProxy */;
+		};
+		92926B26308CC2CF00361D4A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 92926B1F308CC2CF00361D4A /* VaoPushNotificationService */;
+			targetProxy = 92926B25308CC2CF00361D4A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		92926AF5308CC2AC00361D4A /* Debug configuration for PBXProject "VaoPush" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		92926AF6308CC2AC00361D4A /* Release configuration for PBXProject "VaoPush" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		92926AF8308CC2AC00361D4A /* Debug configuration for PBXNativeTarget "VaoPush" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = VaoPush/VaoPush.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VaoPush/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Vao Push";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.vaovao.push;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Debug;
+		};
+		92926AF9308CC2AC00361D4A /* Release configuration for PBXNativeTarget "VaoPush" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = VaoPush/VaoPushProduction.entitlements;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VaoPush/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Vao Push";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.vaovao.push;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Release;
+		};
+		92926AFB308CC2AC00361D4A /* Debug configuration for PBXNativeTarget "VaoPushTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.vaovao.push.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VaoPush.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VaoPush";
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Debug;
+		};
+		92926AFC308CC2AC00361D4A /* Release configuration for PBXNativeTarget "VaoPushTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.vaovao.push.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VaoPush.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VaoPush";
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Release;
+		};
+		92926AFE308CC2AC00361D4A /* Debug configuration for PBXNativeTarget "VaoPushUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.vaovao.push.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = VaoPush;
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Debug;
+		};
+		92926AFF308CC2AC00361D4A /* Release configuration for PBXNativeTarget "VaoPushUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.vaovao.push.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = VaoPush;
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Release;
+		};
+		92926B19308CC2C900361D4A /* Debug configuration for PBXNativeTarget "VaoPushWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = VaoPushWidgetExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VaoPushWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VaoPushWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.vaovao.push.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Debug;
+		};
+		92926B1A308CC2C900361D4A /* Release configuration for PBXNativeTarget "VaoPushWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = VaoPushWidgetProduction.entitlements;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VaoPushWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VaoPushWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.vaovao.push.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Release;
+		};
+		92926B2A308CC2CF00361D4A /* Debug configuration for PBXNativeTarget "VaoPushNotificationService" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = VaoPushNotificationService/VaoPushNotificationService.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VaoPushNotificationService/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VaoPushNotificationService;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.vaovao.push.notificationservice;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		92926B2B308CC2CF00361D4A /* Release configuration for PBXNativeTarget "VaoPushNotificationService" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = VaoPushNotificationService/VaoPushNotificationService.entitlements;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VaoPushNotificationService/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VaoPushNotificationService;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.vaovao.push.notificationservice;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		92926AD3308CC2AB00361D4A /* Build configuration list for PBXProject "VaoPush" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92926AF5308CC2AC00361D4A /* Debug configuration for PBXProject "VaoPush" */,
+				92926AF6308CC2AC00361D4A /* Release configuration for PBXProject "VaoPush" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		92926AF7308CC2AC00361D4A /* Build configuration list for PBXNativeTarget "VaoPush" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92926AF8308CC2AC00361D4A /* Debug configuration for PBXNativeTarget "VaoPush" */,
+				92926AF9308CC2AC00361D4A /* Release configuration for PBXNativeTarget "VaoPush" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		92926AFA308CC2AC00361D4A /* Build configuration list for PBXNativeTarget "VaoPushTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92926AFB308CC2AC00361D4A /* Debug configuration for PBXNativeTarget "VaoPushTests" */,
+				92926AFC308CC2AC00361D4A /* Release configuration for PBXNativeTarget "VaoPushTests" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		92926AFD308CC2AC00361D4A /* Build configuration list for PBXNativeTarget "VaoPushUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92926AFE308CC2AC00361D4A /* Debug configuration for PBXNativeTarget "VaoPushUITests" */,
+				92926AFF308CC2AC00361D4A /* Release configuration for PBXNativeTarget "VaoPushUITests" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		92926B18308CC2C900361D4A /* Build configuration list for PBXNativeTarget "VaoPushWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92926B19308CC2C900361D4A /* Debug configuration for PBXNativeTarget "VaoPushWidgetExtension" */,
+				92926B1A308CC2C900361D4A /* Release configuration for PBXNativeTarget "VaoPushWidgetExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		92926B29308CC2CF00361D4A /* Build configuration list for PBXNativeTarget "VaoPushNotificationService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92926B2A308CC2CF00361D4A /* Debug configuration for PBXNativeTarget "VaoPushNotificationService" */,
+				92926B2B308CC2CF00361D4A /* Release configuration for PBXNativeTarget "VaoPushNotificationService" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		925B9997308CC39500A0FAC1 /* XCLocalSwiftPackageReference "../VaoPushCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../VaoPushCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		925B9998308CC3B300A0FAC1 /* VaoPushCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 925B9997308CC39500A0FAC1 /* XCLocalSwiftPackageReference "../VaoPushCore" */;
+			productName = VaoPushCore;
+		};
+		925B999A308CC3C400A0FAC1 /* VaoPushCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 925B9997308CC39500A0FAC1 /* XCLocalSwiftPackageReference "../VaoPushCore" */;
+			productName = VaoPushCore;
+		};
+		925B999C308CC3D700A0FAC1 /* VaoPushCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 925B9997308CC39500A0FAC1 /* XCLocalSwiftPackageReference "../VaoPushCore" */;
+			productName = VaoPushCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 92926AD0308CC2AB00361D4A /* Project object */;
+	validationLevel = 1;
+}

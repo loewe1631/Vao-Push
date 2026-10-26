@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "name": "我的行情",
+  "family": "medium",
+  "theme": "system",
+  "layout": {
+    "id": "quotes", "type": "list", "source": "items", "limit": 3, "spacing": 8,
+    "row": {
+      "id": "quote_row", "type": "row", "spacing": 10,
+      "children": [
+        { "id": "identity", "type": "column", "spacing": 2, "children": [
+          { "id": "symbol", "type": "text", "bind": "fields.symbol", "font_size": 14, "weight": "semibold" },
+          { "id": "volume", "type": "text", "bind": "fields.volume", "font_size": 10, "color": "secondary" }
+        ] },
+        { "id": "price", "type": "number", "bind": "fields.price", "decimals": 2, "font_size": 16, "alignment": "trailing" },
+        { "id": "change", "type": "badge", "bind": "fields.change", "format": "percent", "decimals": 2, "color_rule": "signed", "font_size": 13, "flex": 0 }
+      ]
+    }
+  }
+}

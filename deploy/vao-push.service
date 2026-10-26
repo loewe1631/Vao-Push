@@ -1,0 +1,14 @@
+[Unit]
+Description=Vao Push
+After=network-online.target
+[Service]
+Type=simple
+WorkingDirectory=/srv/vao-push
+Environment=VAO_CONFIG=/srv/vao-push/run/config.json
+ExecStart=/srv/vao-push/bin/vao-push
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+UMask=0077
+[Install]
+WantedBy=default.target

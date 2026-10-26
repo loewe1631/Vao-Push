@@ -1,0 +1,6 @@
+{
+  "fields": {
+    "progress": { "type": "percent", "label": "完成率", "value": "68" },
+    "status": { "type": "text", "label": "状态", "value": "进行中" }
+  }
+}

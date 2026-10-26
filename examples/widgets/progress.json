@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "source_updated_at": "2026-10-24T10:00:00Z",
+  "valid_for_seconds": 300,
+  "title": "示例任务",
+  "fields": {
+    "name": {"type": "text", "label": "名称", "value": "示例任务 A"},
+    "progress": {"type": "percent", "label": "完成率", "value": "62.5"},
+    "status": {"type": "text", "label": "状态", "value": "运行中"},
+    "error_count": {"type": "integer", "label": "错误数", "value": "0"}
+  }
+}

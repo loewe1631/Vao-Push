@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "name": "任务进度",
+  "family": "medium",
+  "theme": "system",
+  "layout": {
+    "id": "root",
+    "type": "column",
+    "spacing": 10,
+    "children": [
+      { "id": "field_0", "type": "number", "bind": "fields.progress", "label": "完成率", "font_size": 28 },
+      { "id": "field_1", "type": "text", "bind": "fields.status", "label": "状态", "font_size": 14 }
+    ]
+  }
+}

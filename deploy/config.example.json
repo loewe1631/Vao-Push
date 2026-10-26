@@ -1,0 +1,13 @@
+{
+  "listen": "0.0.0.0:8188",
+  "database_url": "postgres://vaopush:REPLACE_WITH_RANDOM_PASSWORD@127.0.0.1:55432/vaopush?sslmode=disable",
+  "server_name": "Vao Push",
+  "server_id": "REPLACE_WITH_RANDOM_SERVER_ID",
+  "master_key": "REPLACE_WITH_64_HEX_CHARACTERS",
+  "bootstrap_username": "admin",
+  "bootstrap_password": "REPLACE_WITH_RANDOM_PASSWORD_AT_LEAST_20_CHARACTERS",
+  "public_url": "http://203.0.113.10:8188",
+  "web_dir": "/opt/vao-push/current/web",
+  "web_listen": "0.0.0.0:18188",
+  "web_url": "http://203.0.113.10:18188"
+}

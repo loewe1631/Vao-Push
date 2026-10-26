@@ -1,0 +1,31 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+*.p8
+*.p12
+*.pfx
+*.key
+*.pem
+*.mobileprovision
+*.xcuserstate
+xcuserdata/
+DerivedData/
+.build/
+node_modules/
+web/dist/
+server/bin/
+coverage/
+.private/
+internal-notes/
+local/
+*.log
+
+# Local deployment state and build outputs
+run/
+server/server
+*.dump
+
+# Python installer bytecode
+__pycache__/
+*.pyc

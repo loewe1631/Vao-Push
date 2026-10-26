@@ -1,0 +1,317 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Vao Push Card Design v1",
+  "description": "运行时另校验最多24KiB、6层、64节点、全局唯一节点id及UTF-8字节长度。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "family",
+    "layout"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "family": {
+      "enum": [
+        "small",
+        "medium",
+        "large",
+        "extraLarge"
+      ]
+    },
+    "theme": {
+      "enum": [
+        "system",
+        "light",
+        "dark"
+      ]
+    },
+    "layout": {
+      "$ref": "#/$defs/node"
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "type": {
+          "enum": [
+            "row",
+            "column",
+            "grid",
+            "list",
+            "text",
+            "number",
+            "badge",
+            "divider",
+            "spacer",
+            "chart"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "bind": {
+          "type": "string",
+          "pattern": "^(fields|series)\\.[A-Za-z][A-Za-z0-9_]{0,63}$"
+        },
+        "format": {
+          "enum": [
+            "",
+            "decimal",
+            "percent"
+          ]
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "color_rule": {
+          "enum": [
+            "",
+            "signed"
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "enum": [
+                "",
+                "primary",
+                "secondary",
+                "accent"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          ]
+        },
+        "background": {
+          "anyOf": [
+            {
+              "enum": [
+                "",
+                "primary",
+                "secondary",
+                "accent"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          ]
+        },
+        "font_size": {
+          "anyOf": [
+            {
+              "const": 0
+            },
+            {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 32
+            }
+          ]
+        },
+        "weight": {
+          "enum": [
+            "",
+            "regular",
+            "medium",
+            "semibold",
+            "bold"
+          ]
+        },
+        "alignment": {
+          "enum": [
+            "",
+            "leading",
+            "center",
+            "trailing"
+          ]
+        },
+        "spacing": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "padding": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "radius": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "flex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "source": {
+          "const": "items"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          },
+          "minItems": 1,
+          "maxItems": 12
+        },
+        "row": {
+          "$ref": "#/$defs/node"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "row",
+                  "column",
+                  "grid"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "children"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "children"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "grid"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "columns"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "columns"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "list"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "source",
+              "limit",
+              "row"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "source"
+                  ]
+                },
+                {
+                  "required": [
+                    "limit"
+                  ]
+                },
+                {
+                  "required": [
+                    "row"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "chart"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bind"
+            ],
+            "properties": {
+              "bind": {
+                "pattern": "^series\\."
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "bind": {
+                "pattern": "^fields\\."
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

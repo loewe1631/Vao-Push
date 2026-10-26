@@ -1,0 +1,20 @@
+import {readFile} from 'node:fs/promises';
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+const source=await readFile(new URL('../src/cardDesign.ts',import.meta.url),'utf8');
+const randomSource=await readFile(new URL('../src/random.ts',import.meta.url),'utf8');
+const randomJS=ts.transpileModule(randomSource,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
+const randomURL='data:text/javascript;base64,'+Buffer.from(randomJS).toString('base64');
+const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace('"./random"', JSON.stringify(randomURL));
+const {formatValue}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
+test('Decimal display retains large values and matches native half-even rounding',()=>{
+ assert.equal(formatValue({type:'decimal',value:'12345678901234567890.12345678'},8),'12,345,678,901,234,567,890.12345678');
+ assert.equal(formatValue({type:'decimal',value:'123.445'},2),'123.44');
+ assert.equal(formatValue({type:'decimal',value:'123.455'},2),'123.46');
+ assert.equal(formatValue({type:'decimal',value:'-123.445'},2),'-123.44');
+ assert.equal(formatValue({type:'percent',value:'-0.99'},2),'-0.99%');
+ assert.equal(formatValue({type:'percent',value:null},2),'不可用');
+ assert.equal(formatValue({type:'text',value:'not-a-price'},2,'decimal'),'不可用');
+ assert.equal(formatValue({type:'text',value:'1234.500'},undefined,'decimal'),'1,234.5');
+});

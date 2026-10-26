@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "target": {"group_id": "group_demo"},
+  "title": "任务完成",
+  "body": "示例任务已经完成。",
+  "notification": {"level": "active", "sound": "default"},
+  "ttl_seconds": 3600
+}
