@@ -80,6 +80,7 @@ Web接口使用管理员会话及写请求Origin/CSRF校验。参数与响应见
 | PUT /v1/cards/{id} | 保存草稿，If-Match为"draft-{draft_revision}" |
 | GET /v1/cards/{id}/deletion | 预览卡片及订阅设备影响、删除确认版本 |
 | DELETE /v1/cards/{id} | 条件删除单张卡片，If-Match为确认版本 |
+| GET /v1/cards/{id}/publication-check | 管理员只读检查已保存草稿，If-Match 对应草稿版本；返回检查提示、布局规模与确认令牌 |
 | POST /v1/cards/{id}/publish | 条件发布对应草稿，使用相同版本头 |
 | POST/DELETE /v1/cards/{id}/codes | 生成/撤销导入码；撤销码不影响已有订阅 |
 | GET /v1/cards/{id}/subscribers | 管理员查看订阅设备 |
@@ -94,3 +95,12 @@ Web接口使用管理员会话及写请求Origin/CSRF校验。参数与响应见
 ## 1.1.0尺寸布局兼容
 
 设计协议1继续支持。协议2增加可选`layouts`映射（small/medium/large/extraLarge），必填`layout`为默认；每份布局仍受原24KiB/64节点/6层限制，整包最多64KiB。所有尺寸一次保存/发布，使用同一revision与数据源。支持的客户端读取时发送`X-Vao-Card-Schema: 2`，未声明能力的读取返回v1默认设计，已有订阅不用重新导入。结构与绑定在发布时逐份验证，本机微调冲突不静默丢弃。详见[1.1.0说明](server-1.1.md)与[v2 Schema](card-design-v2.schema.json)。
+
+
+## 发布前检查与客户端兼容
+
+Web 的“检查并发布”先保存草稿，再以 `If-Match: "draft-N"` 调用 `GET /v1/cards/{id}/publication-check`。检查不发布、不修改数据源、不发送通知，只报告字段绑定、空值、文本小数位、图表样本、自定义颜色、badge 背景及已发布节点身份变化等情况。`ready=false` 时应返回编辑；警告不能证明某台设备存在微调，实际微调只保存在设备。
+
+确认发布时，新版 Web 同时发送原 `If-Match` 与可选 `X-Vao-Publication-Check`（使用报告中的 `confirmation_token`）。检查后草稿、源快照或已发布版本变化则返回 412，需重新检查。既有调用方不发送新头时保持原发布契约。新端点只允许卡片所属管理员访问，不开放设备凭据。
+
+客户端继续使用已有 schema 1 / 2，不增加节点或改变 `color` 字段类型。Web 的圆角分组和文字胶囊由 column / text 与原样式组合；文字胶囊的颜色是静态颜色。历史序列收集、条件隐藏、原生图标与自定义明暗色对不在本次范围。Web 预览改进空文字、数值类型、signed 颜色、系统明暗色及趋势时间间隔；字体、布局压缩和最终效果仍以真机为准。

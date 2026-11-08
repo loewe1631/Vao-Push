@@ -159,6 +159,7 @@ func (a *App) routes() {
 	a.route("PUT /v1/cards/{id}", a.saveCard)
 	a.route("GET /v1/cards/{id}/deletion", a.cardDeletion)
 	a.route("DELETE /v1/cards/{id}", a.cardDeletion)
+	a.route("GET /v1/cards/{id}/publication-check", a.cardPublicationCheck)
 	a.route("POST /v1/cards/{id}/publish", a.publishCard)
 	a.route("POST /v1/cards/{id}/codes", a.cardCode)
 	a.route("DELETE /v1/cards/{id}/codes", a.revokeCardCodes)

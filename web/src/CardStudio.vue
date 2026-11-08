@@ -28,15 +28,35 @@ import {
   type Node,
 } from "./cardDesign";
 import { locale, resolvedTheme, tr, localizeErrorMessage } from "./i18n";
+import {
+  designPrompt,
+  fieldsForNode,
+  usesNumericFormat,
+  wrapGroup,
+  pillNode,
+} from "./cardCompatibility";
 const props = defineProps<{ csrf: string }>();
 function familyTitle(value: string) {
-  return ({small:tr("小尺寸","Small"),medium:tr("中尺寸","Medium"),large:tr("大尺寸","Large"),extraLarge:tr("超大尺寸","Extra Large")} as Record<string,string>)[value] || value;
+  return (
+    (
+      {
+        small: tr("小尺寸", "Small"),
+        medium: tr("中尺寸", "Medium"),
+        large: tr("大尺寸", "Large"),
+        extraLarge: tr("超大尺寸", "Extra Large"),
+      } as Record<string, string>
+    )[value] || value
+  );
 }
 function revisionLabel(value: string | number) {
   return locale.value === "en" ? `Rev ${value}` : `第${value}版`;
 }
 function widgetTheme(theme?: string) {
-  return theme === "dark" || theme === "light" ? theme : resolvedTheme.value;
+  return theme === "dark" || theme === "light"
+    ? theme
+    : previewAppearance.value === "system"
+      ? resolvedTheme.value
+      : previewAppearance.value;
 }
 type Row = Record<string, any>;
 const editingSource = ref("");
@@ -154,18 +174,28 @@ const leaves = computed(() =>
     ["text", "number", "badge", "chart"].includes(n.type),
   ),
 );
+const selectedField = computed(() =>
+  node.value
+    ? fieldsForNode(
+        editingLayout.value,
+        node.value,
+        source.value?.state || previewState.value,
+      )[(node.value.bind || "").split(".")[1] || ""]
+    : undefined,
+);
+const numericControls = computed(
+  () => !!node.value && usesNumericFormat(node.value, selectedField.value),
+);
 const availableFields = computed(() => {
-  const chart = node.value?.type === "chart";
-  const values = chart
-    ? source.value?.state?.series ||
-      source.value?.state?.items?.[0]?.series ||
-      {}
-    : source.value?.state?.fields ||
-      source.value?.state?.items?.[0]?.fields ||
-      neutralState(locale.value).fields;
+  if (!node.value) return [];
+  const values = fieldsForNode(
+    editingLayout.value,
+    node.value,
+    source.value?.state || previewState.value,
+  );
   return Object.entries(values).map(([key, value]: [string, any]) => ({
-    path: (chart ? "series." : "fields.") + key,
-    label: (value.label || key) + " · " + key,
+    path: (node.value?.type === "chart" ? "series." : "fields.") + key,
+    label: (value.label || key) + " · " + key + " · " + value.type,
   }));
 });
 const unmatched = computed(() =>
@@ -417,6 +447,7 @@ const node = computed(() =>
   allNodes(editingLayout.value).find((n) => n.id === selectedID.value),
 );
 const previewFamily = ref("medium");
+const previewAppearance = ref("system");
 const editFamily = ref("default");
 const editingLayout = computed<Node>({
   get: () =>
@@ -698,12 +729,42 @@ async function publish() {
         ) + unmatched.value.join(locale.value === "en" ? ", " : "、"),
       );
     if (dirty.value || !activeID.value) await save();
+    publication.value = await api(
+      "cards/" + activeID.value + "/publication-check",
+      "GET",
+      undefined,
+      { "If-Match": `"draft-${draftRevision.value}"` },
+    );
+  });
+}
+const publication = ref<Row | null>(null);
+const publicationDialog = ref<HTMLDialogElement | null>(null);
+watch(publication, async (pending) => {
+  await nextTick();
+  if (pending && publicationDialog.value && !publicationDialog.value.open)
+    publicationDialog.value.showModal();
+});
+watch(
+  design,
+  () => {
+    publication.value = null;
+  },
+  { deep: true },
+);
+async function confirmPublication() {
+  await action(async () => {
+    const checked = publication.value;
+    if (!checked?.ready) return;
     const r = await api(
       "cards/" + activeID.value + "/publish",
       "POST",
       {},
-      { "If-Match": `"draft-${draftRevision.value}"` },
+      {
+        "If-Match": `"draft-${checked.draft_revision}"`,
+        "X-Vao-Publication-Check": checked.confirmation_token,
+      },
     );
+    publication.value = null;
     publishedRevision.value = r.revision;
     await refresh();
     notice.value = tr(
@@ -724,25 +785,29 @@ async function copy(text: string) {
   }
 }
 function aiPrompt() {
-  const state = previewState.value;
-  const fieldSet = state.fields || state.items?.[0]?.fields || {};
-  const fields = Object.fromEntries(
-    Object.entries(fieldSet).map(([key, value]: [string, any]) => [
-      key,
-      { type: value.type, label: value.label, unit: value.unit },
-    ]),
+  return designPrompt(
+    design.value,
+    previewState.value,
+    aiGoal.value,
+    locale.value,
   );
-  const rules =
-    "schema_version=1. Top-level keys are only schema_version, name, family, theme, layout. family is small/medium/large/extraLarge. theme is system/light/dark. At most 64 nodes and 6 levels. ids are unique and match [A-Za-z][A-Za-z0-9_-]{0,63}. Node types: " +
-    kinds.join(", ") +
-    ". Containers row/column/grid use children; grid needs columns 1..4. Repeating lists use source:items, limit 1..20, and a row node. Bind fields with fields.key and charts with series.key. Allowed style keys: label, text, bind, format(percent/decimal), decimals(0..18), color_rule(signed), color, background(#RRGGBB or primary/secondary/accent), font_size(10..32), weight(regular/medium/semibold/bold), alignment(leading/center/trailing), spacing/padding/radius(0..24), flex(0..4). When revising a design, keep unchanged component ids so phones can retain local adjustments. Do not invent fields, URLs, secrets, or expressions.";
-  if (locale.value === "en") {
-    return `Create a native Vao Push Home Screen card as JSON only. Do not output HTML, JavaScript, or Markdown. ${rules} Current fields: ${JSON.stringify(fields)}. Series: ${JSON.stringify(Object.keys(state.series || {}))}. Current layout: ${JSON.stringify(design.value)}. Display request: ${aiGoal.value}. Use only existing fields and return one complete valid JSON object. Reference shape: ${JSON.stringify(demoDesign.value)}.`;
-  }
-  return `请为Vao Push生成一份原生小组件卡片JSON，只返回JSON，不输出HTML、JavaScript或Markdown。${rules} 当前字段结构：${JSON.stringify(fields)}；系列：${JSON.stringify(Object.keys(state.series || {}))}。布局示例：${JSON.stringify(design.value)}。我的展示要求：${aiGoal.value}。先检查字段是否存在；只用已有字段生成完整有效JSON，不要求我手改技术参数。参考输出结构：${JSON.stringify(demoDesign.value)}。`;
+}
+function groupSelection() {
+  editingLayout.value = wrapGroup(
+    editingLayout.value,
+    selectedID.value,
+    "group_" + randomID().replaceAll("-", "").slice(0, 12),
+  );
+  advancedLayout.value = true;
 }
 function add(kind: string) {
-  const created = newNode(kind, locale.value);
+  const created =
+    kind === "text-pill"
+      ? pillNode(
+          "pill_" + randomID().replaceAll("-", "").slice(0, 12),
+          locale.value,
+        )
+      : newNode(kind, locale.value);
   const selected = node.value;
   if (selected && ["row", "column", "grid"].includes(selected.type))
     selected.children!.push(created);
@@ -2540,8 +2605,33 @@ onUnmounted(() => {
                     <option v-for="kind in kinds" :key="kind" :value="kind">
                       {{ kindName(kind, locale) }}
                     </option>
+                    <option value="text-pill">
+                      {{
+                        tr("文字胶囊（固定底色）", "Text Pill (Static Fill)")
+                      }}
+                    </option>
                   </select></label
                 >
+                <button
+                  class="secondary"
+                  @click="groupSelection"
+                  :disabled="!node"
+                >
+                  {{
+                    tr(
+                      "将所选内容放入圆角分组",
+                      "Wrap Selection in a Rounded Group",
+                    )
+                  }}
+                </button>
+                <p class="muted">
+                  {{
+                    tr(
+                      "保留所选内容，继续调整分组背景与间距；文字胶囊使用固定颜色。",
+                      "Keep the selected content and adjust its group background and spacing. Text pills use static colors.",
+                    )
+                  }}
+                </p>
               </div>
               <div v-if="node" class="node-inspector">
                 <h3>
@@ -2610,6 +2700,21 @@ onUnmounted(() => {
                       )
                     "
                 /></label>
+                <p
+                  v-if="
+                    node.bind &&
+                    selectedField?.type === 'text' &&
+                    !numericControls
+                  "
+                  class="muted"
+                >
+                  {{
+                    tr(
+                      "此字段是文字；小数位和千分位不会改变其内容。需要数值格式时，请绑定数值字段。",
+                      "This field is text; decimal places and grouping do not change it. Bind a numeric field for number formatting.",
+                    )
+                  }}
+                </p>
                 <div class="inspector-grid">
                   <label v-if="['text', 'number', 'badge'].includes(node.type)"
                     >{{ tr("字号", "Font Size")
@@ -2619,7 +2724,11 @@ onUnmounted(() => {
                       min="10"
                       max="32"
                       @input="number($event, 'font_size')" /></label
-                  ><label v-if="['number', 'badge'].includes(node.type)"
+                  ><label
+                    v-if="
+                      ['text', 'number', 'badge'].includes(node.type) &&
+                      numericControls
+                    "
                     >{{ tr("小数位", "Decimals")
                     }}<input
                       type="number"
@@ -2702,10 +2811,11 @@ onUnmounted(() => {
                   >{{ tr("背景", "Background")
                   }}<input
                     v-model="node.background"
-                    placeholder="#RRGGBB" /></label
+                    placeholder="primary / secondary / accent / #RRGGBB" /></label
                 ><label
                   v-if="
-                    advancedLayout && ['number', 'badge'].includes(node.type)
+                    advancedLayout &&
+                    ['text', 'number', 'badge'].includes(node.type)
                   "
                   >{{ tr("数值格式", "Number Format")
                   }}<select v-model="node.format">
@@ -2774,7 +2884,7 @@ onUnmounted(() => {
                 @click="publish"
                 :disabled="busy || !sourceID || !source?.state"
               >
-                {{ tr("发布到设备", "Publish to Devices") }}</button
+                {{ tr("检查并发布", "Check and Publish") }}</button
               ><span class="muted"
                 >{{
                   dirty
@@ -2862,6 +2972,16 @@ onUnmounted(() => {
                   </select></label
                 >
               </div>
+              <label v-if="design.theme === 'system' || !design.theme"
+                >{{ tr("系统外观预览", "System Appearance Preview")
+                }}<select v-model="previewAppearance">
+                  <option value="system">
+                    {{ tr("当前外观", "Current Appearance") }}
+                  </option>
+                  <option value="light">{{ tr("浅色", "Light") }}</option>
+                  <option value="dark">{{ tr("深色", "Dark") }}</option>
+                </select></label
+              >
               <div class="preview-stage">
                 <div
                   ref="canvas"
@@ -2946,6 +3066,82 @@ onUnmounted(() => {
         </div>
       </template>
     </template>
+    <dialog
+      v-if="publication"
+      ref="publicationDialog"
+      class="publication-dialog"
+      @cancel="publication = null"
+    >
+      <section class="panel">
+        <h2>{{ tr("发布前检查", "Publication Check") }}</h2>
+        <p>
+          {{
+            tr(
+              "App 1.0.0 使用默认布局；App 1.1.0 使用对应尺寸布局。发布将更新已订阅设备。",
+              "App 1.0.0 uses the default layout; App 1.1.0 uses matching size layouts. Publishing updates subscribed devices.",
+            )
+          }}
+        </p>
+        <ul>
+          <li v-for="layout in publication.layouts" :key="layout.family">
+            {{
+              layout.family === "default"
+                ? tr("默认布局", "Default Layout")
+                : familyTitle(layout.family)
+            }}
+            · {{ layout.nodes }} {{ tr("个组件", "nodes") }} ·
+            {{ layout.bytes }} bytes
+          </li>
+        </ul>
+        <ul v-if="publication.warnings.length" class="publication-warnings">
+          <li v-for="(warning, index) in publication.warnings" :key="index">
+            <strong
+              >{{
+                warning.family === "default"
+                  ? tr("默认布局", "Default Layout")
+                  : familyTitle(warning.family)
+              }}{{ warning.node_id ? " / " + warning.node_id : "" }}</strong
+            >：{{ locale === "en" ? warning.message_en : warning.message }}
+          </li>
+        </ul>
+        <p v-else>
+          {{
+            tr(
+              "布局与当前数据检查通过。",
+              "Layout and source-data checks passed.",
+            )
+          }}
+        </p>
+        <p v-if="publication.omitted_warnings">
+          {{
+            tr(
+              "提示较多，请分批检查各布局。",
+              "More warnings exist; review each layout in smaller steps.",
+            )
+          }}
+        </p>
+        <p class="muted">
+          {{
+            tr(
+              "网页预览用于检查配置；实际字体、系统边距和刷新仍以真机为准。",
+              "Web previews help inspect configuration; real-device fonts, margins, and refresh remain authoritative.",
+            )
+          }}
+        </p>
+        <p v-if="error" role="alert" class="banner error">{{ error }}</p>
+        <div class="actions">
+          <button class="secondary" @click="publication = null">
+            {{ tr("返回编辑", "Back to Editing") }}</button
+          ><button
+            class="primary"
+            :disabled="busy || !publication.ready"
+            @click="confirmPublication"
+          >
+            {{ tr("确认发布到设备", "Confirm Publication") }}
+          </button>
+        </div>
+      </section>
+    </dialog>
   </div>
 </template>
 
@@ -3003,6 +3199,10 @@ onUnmounted(() => {
   padding: 8px 2px 12px;
 }
 .widget-canvas {
+  --card-chart-up: #30b0c7;
+  --card-chart-down: #ff9500;
+  --card-accent: #1677f2;
+  --card-soft: #eaf3ff;
   --card-text: #1b2434;
   --card-muted: #66758a;
   --card-line: #e4e9f0;
@@ -3038,6 +3238,10 @@ onUnmounted(() => {
   min-height: 350px;
 }
 .widget-canvas.dark {
+  --card-chart-up: #40cbe0;
+  --card-chart-down: #ff9f0a;
+  --card-accent: #8fbeff;
+  --card-soft: #213650;
   --card-text: #e6ebf5;
   --card-muted: #a6afbf;
   --card-line: #303846;
@@ -3292,5 +3496,27 @@ onUnmounted(() => {
   .widget-canvas.extraLarge {
     width: min(100%, 350px);
   }
+}
+
+.publication-dialog {
+  width: min(760px, 94vw);
+  max-height: 85vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0;
+  background: var(--surface);
+  color: var(--text);
+}
+.publication-dialog::backdrop {
+  background: rgba(8, 13, 24, 0.62);
+}
+.publication-warnings {
+  max-height: 35vh;
+  overflow: auto;
+  padding-left: 24px;
+}
+.publication-warnings li {
+  margin: 10px 0;
 }
 </style>

@@ -128,8 +128,8 @@ func (a *App) publishCard(w http.ResponseWriter, r *http.Request) error {
 	var raw []byte
 	var draft, revision int64
 	var hasData bool
-	var currentState []byte
-	e = tx.QueryRow(ctx, `SELECT t.draft,t.draft_revision,t.revision,s.state IS NOT NULL,s.state FROM card_templates t JOIN card_sources c ON c.id=t.source_id JOIN streams s ON s.id=c.stream_id WHERE t.id=$1 AND t.user_id=$2 FOR UPDATE OF t`, r.PathValue("id"), p.User).Scan(&raw, &draft, &revision, &hasData, &currentState)
+	var currentState, published []byte
+	e = tx.QueryRow(ctx, `SELECT t.draft,t.draft_revision,t.revision,s.state IS NOT NULL,s.state,t.published FROM card_templates t JOIN card_sources c ON c.id=t.source_id JOIN streams s ON s.id=c.stream_id WHERE t.id=$1 AND t.user_id=$2 FOR UPDATE OF t`, r.PathValue("id"), p.User).Scan(&raw, &draft, &revision, &hasData, &currentState, &published)
 	if e == pgx.ErrNoRows {
 		return notfound()
 	}
@@ -138,6 +138,9 @@ func (a *App) publishCard(w http.ResponseWriter, r *http.Request) error {
 	}
 	if r.Header.Get("If-Match") != `"draft-`+strconv.FormatInt(draft, 10)+`"` {
 		return APIError{412, "draft_conflict", "请先保存当前草稿，再发布对应版本。"}
+	}
+	if checked := r.Header.Get("X-Vao-Publication-Check"); checked != "" && checked != publicationToken(raw, published, currentState, draft, revision) {
+		return APIError{412, "publication_check_changed", "检查后草稿、数据或发布版本已变化，请重新检查。"}
 	}
 	if !hasData {
 		return bad("no_source_data", "请先发送或采集一份有效数据，再发布卡片。")

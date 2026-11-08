@@ -308,6 +308,16 @@ export function formatValue(
     if (decimals === undefined && value.includes("."))
       value = value.replace(/0+$/, "").replace(/\.$/, "");
   }
+  if (type === "text") return value;
+  if (type === "datetime") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? unavailable
+      : new Intl.DateTimeFormat(lang === "en" ? "en-US" : "zh-Hans", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }).format(date);
+  }
   if (decimals !== undefined && /^-?[0-9]+(\.[0-9]+)?$/.test(value)) {
     const negative = value.startsWith("-");
     let [whole, fraction = ""] = value.replace(/^-/, "").split(".");
@@ -339,4 +349,26 @@ export function formatValue(
   return (
     value + (type === "percent" ? "%" : field.unit ? " " + field.unit : "")
   );
+}
+
+/** Keep explicit empty text and signed numeric semantics consistent with the native renderer. */
+export function nodeValue(
+  node: Node,
+  field: any,
+  lang: "zh" | "en" = "zh",
+): string {
+  return node.text !== undefined && node.text !== null
+    ? node.text
+    : formatValue(field, node.decimals, node.format, lang);
+}
+export function signedColor(field: any): string {
+  const raw = field?.value;
+  if (
+    typeof raw !== "string" ||
+    !/^-?[0-9]+(\.[0-9]+)?$/.test(raw) ||
+    raw.replace(/[^0-9]/g, "").length > 38 ||
+    (raw.split(".")[1]?.length || 0) > 18
+  )
+    return "var(--card-muted)";
+  return raw.startsWith("-") && /[1-9]/.test(raw) ? "#F6465D" : "#16A667";
 }

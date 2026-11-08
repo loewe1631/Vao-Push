@@ -3033,6 +3033,15 @@
               "type": "string"
             },
             "description": "按草稿revision构造 \"draft-{revision}\"，避免代理弱化ETag。"
+          },
+          {
+            "name": "X-Vao-Publication-Check",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "可选发布检查令牌；草稿、数据或发布版本变化时返回 412。未发送时保留既有行为。"
           }
         ]
       }
@@ -3879,6 +3888,52 @@
             }
           }
         }
+      }
+    },
+    "/v1/cards/{id}/publication-check": {
+      "get": {
+        "summary": "检查卡片发布兼容性（不保存或发布）",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "对应已保存草稿的版本，如 \"draft-2\""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "管理员发布前检查：data 含 ready、draft_revision、confirmation_token、layouts、warnings、omitted_warnings。warnings 提供 code、family、node_id、message、message_en。"
+          },
+          "401": {
+            "description": "未登录"
+          },
+          "403": {
+            "description": "设备或非管理员凭据"
+          },
+          "404": {
+            "description": "不存在或不属于当前管理员"
+          },
+          "412": {
+            "description": "草稿版本已变化"
+          }
+        },
+        "security": [
+          {
+            "webSession": []
+          }
+        ]
       }
     }
   },

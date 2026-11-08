@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { formatValue, type Node } from "./cardDesign";
+import { nodeValue, signedColor, type Node } from "./cardDesign";
 import { locale, tr } from "./i18n";
+import { chartGeometry } from "./cardCompatibility";
 const p = defineProps<{
   node: Node;
   state: any;
@@ -17,23 +18,13 @@ const field = computed(
       (p.node.bind || "").split(".")[1] || ""
     ],
 );
-const value = computed(
-  () =>
-    p.node.text ||
-    formatValue(field.value, p.node.decimals, p.node.format, locale.value),
-);
-const signed = computed(() =>
-  field.value?.value == null
-    ? "#7c8999"
-    : String(field.value.value).startsWith("-")
-      ? "#F6465D"
-      : "#16A667",
-);
+const value = computed(() => nodeValue(p.node, field.value, locale.value));
+const signed = computed(() => signedColor(field.value));
 const color = (value?: string) =>
   ({
     primary: "var(--card-text)",
     secondary: "var(--card-muted)",
-    accent: "#1677F2",
+    accent: "var(--card-accent)",
   })[value || "primary"] || value;
 const style = computed(() => ({
   color:
@@ -41,7 +32,7 @@ const style = computed(() => ({
       ? signed.value
       : color(p.node.color),
   background: p.node.background ? color(p.node.background) : "transparent",
-  fontSize: (p.node.font_size || (p.node.type === "text" ? 13 : 16)) + "px",
+  fontSize: (p.node.font_size ?? (p.node.type === "text" ? 13 : 16)) + "px",
   fontWeight:
     p.node.weight === "bold"
       ? 700
@@ -66,39 +57,9 @@ const series = computed(
       (p.node.bind || "").split(".")[1] || ""
     ],
 );
-const points = computed(() => {
-  const values = (series.value?.points || []).map((p: any) =>
-    Number(p.c ?? p.value),
-  );
-  const min = Math.min(...values),
-    max = Math.max(...values),
-    span = max - min || 1;
-  return values
-    .map(
-      (v: number, i: number) =>
-        `${5 + (i * 290) / Math.max(values.length - 1, 1)},${65 - ((v - min) / span) * 60}`,
-    )
-    .join(" ");
-});
-
-const candles = computed(() => {
-  const points = series.value?.points || [];
-  const low = Math.min(...points.map((p: any) => Number(p.l))),
-    high = Math.max(...points.map((p: any) => Number(p.h))),
-    span = high - low || 1;
-  return points.map((p: any, i: number) => {
-    const y = (v: string) => 65 - ((Number(v) - low) / span) * 60;
-    return {
-      x: 5 + (i * 290) / Math.max(points.length - 1, 1),
-      high: y(p.h),
-      low: y(p.l),
-      top: Math.min(y(p.o), y(p.c)),
-      height: Math.max(Math.abs(y(p.o) - y(p.c)), 1),
-      width: Math.min(10, 240 / Math.max(points.length, 1)),
-      color: Number(p.c) >= Number(p.o) ? "#16A667" : "#F6465D",
-    };
-  });
-});
+const geometry = computed(() => chartGeometry(series.value));
+const points = computed(() => geometry.value.points);
+const candles = computed(() => geometry.value.candles);
 </script>
 <template>
   <div
@@ -181,10 +142,10 @@ const candles = computed(() => {
     <hr v-else-if="node.type === 'divider'" />
     <div
       v-else-if="node.type === 'spacer'"
-      :style="{ minHeight: (node.spacing || 4) + 'px' }"
+      :style="{ minHeight: (node.spacing ?? 4) + 'px' }"
     />
-    <div v-else-if="node.type === 'chart'">
-      <span v-if="!series?.points?.length" class="placeholder">{{
+    <div v-else-if="node.type === 'chart'" class="native-chart">
+      <span v-if="!series" class="placeholder">{{
         tr("暂无历史数据", "No chart history yet")
       }}</span
       ><svg
@@ -215,7 +176,7 @@ const candles = computed(() => {
           v-else
           :points="points"
           fill="none"
-          stroke="#1677F2"
+          stroke="var(--card-accent)"
           stroke-width="2"
         />
       </svg>
@@ -226,7 +187,8 @@ const candles = computed(() => {
         v-if="node.type === 'badge'"
         class="node-badge"
         :style="{
-          background: node.color_rule === 'signed' ? signed : '#eaf3ff',
+          background:
+            node.color_rule === 'signed' ? signed : 'var(--card-soft)',
           color: node.color_rule === 'signed' ? 'white' : color(node.color),
         }"
         >{{ value }}</span
@@ -255,14 +217,18 @@ const candles = computed(() => {
   margin-bottom: 2px;
 }
 .node-value {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
 }
 .node-badge {
   display: inline-block;
   white-space: nowrap;
-  border-radius: 6px;
-  padding: 5px 8px;
+  border-radius: 5px;
+  padding: 5px 7px;
   font-variant-numeric: tabular-nums;
 }
 .placeholder {
@@ -277,7 +243,8 @@ hr {
 }
 svg {
   width: 100%;
-  height: auto;
+  height: 70px;
+  min-height: 40px;
   max-height: 140px;
 }
 </style>

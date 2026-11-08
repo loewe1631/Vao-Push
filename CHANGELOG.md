@@ -2,6 +2,18 @@
 
 ## 1.1.0
 
+### 卡片工作台维护修正
+
+- Web 预览保留空文字与文本字段原文，修正 signed 数字颜色和零值判断，补齐深色预览及图表时间间隔。
+- AI 设计说明支持 schema 1 / 2、按尺寸布局及根字段 / 列表项作用域，保护已有节点身份与旧版默认布局。
+- 设计器提供现有节点组成的圆角分组、静态文字胶囊及按字段类型显示的数值设置。
+- 发布前显示布局规模、字段与样式提示以及可能影响本机微调的节点变化；可选检查令牌避免发布已过期的检查结果。
+- 延续 App 1.0.0 / 1.1.0 的现有协议，无需重打包客户端。
+
+These source maintenance fixes improve native-preview consistency, schema 2 AI instructions, existing-node compositions, and administrator publication checks. Existing app 1.0.0 and 1.1.0 clients remain supported. Prebuilt downloads remain identified by the assets published on the Release page.
+
+### 初始发行
+
 - 新增命名推送列表，支持独立发送地址、设备管理、改名和删除；保留原默认地址。
 - 新增同一卡片的尺寸布局覆盖、固定预览和溢出提示；未声明支持的旧客户端继续读取v1默认布局。
 - API/Web支持逐条指定可选HTTPS图标，旧客户端继续使用原文字消息。
