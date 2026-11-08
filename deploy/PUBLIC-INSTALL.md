@@ -56,3 +56,10 @@ The server package includes only this product's dedicated production push identi
 ## 发布包构建
 
 维护者先构建Web和对应架构Go程序，再使用`deploy/package-release.py`。正式包需要主许可证、第三方许可、本产品生产推送身份和更新公钥/配置；`--candidate`只用于不附生产身份的隔离验证包。打包与签名工具不会自行上传或发布。
+
+
+### 1.1.0 维护包原地刷新
+
+已安装早期 1.1.0 时，可再次运行正式安装器的 `--upgrade --prefix <安装目录>`。不同内容会保存到独立目录，原程序及数据保留，并执行备份和健康检查；重复运行完全相同的包不会重新切换。旧版 Web 更新器只比较版本号，同版本维护包请使用此命令刷新。不要手动覆盖正在运行的 releases 目录。
+
+For an earlier 1.1.0 installation, rerun the official installer with `--upgrade --prefix <installation>`. The refreshed package uses a separate content directory with backup and health checks. Repeating the identical package is a no-op. Older Web updaters compare version numbers and do not offer same-version maintenance rebuilds.

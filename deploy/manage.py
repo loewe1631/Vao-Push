@@ -98,7 +98,18 @@ def upgrade_locked(root,bundle):
     import re
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,79}',manifest['version']):raise RuntimeError('Invalid release version')
     target=root/'releases'/manifest['version']
-    if target.exists():raise RuntimeError('This release directory already exists; files were kept')
+    if target.exists():
+        # A maintenance rebuild keeps the public version while preserving the
+        # previous immutable program directory for rollback.
+        identity=hashlib.sha256(json.dumps(manifest,sort_keys=True,separators=(',',':')).encode()).hexdigest()[:16]
+        current=(root/'current').resolve()
+        if current.is_dir():
+            installed=validate_bundle(current)
+            if installed==manifest:
+                print('This exact release is already installed. Configuration and data were kept.')
+                return
+        target=root/'releases'/(manifest['version']+'-'+identity)
+        if target.exists():raise RuntimeError('This release content directory already exists; files were kept')
     backup(root)
     config_path=root/'run/config.json'
     original_config=config_path.read_bytes()

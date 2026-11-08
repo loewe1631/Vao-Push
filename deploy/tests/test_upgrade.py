@@ -117,6 +117,53 @@ class PackagedIdentityUpgrade(unittest.TestCase):
             finally:manage.run,manage.backup,manage.healthy=old_run,old_backup,old_healthy
             self.assertEqual(checks,['new','old']);self.assertEqual((root/'current').resolve().name,'old');self.assertEqual(json.loads((root/'run/installation.json').read_text())['version'],'old')
 
+    def test_same_version_refresh_uses_a_new_directory_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            parent=Path(directory);root=parent/'root';(root/'run').mkdir(parents=True)
+            previous=root/'releases/1.1.0';(previous/'bin').mkdir(parents=True)
+            (previous/'bin/vao-push').write_bytes(b'old binary')
+            files={'bin/vao-push':hashlib.sha256(b'old binary').hexdigest()}
+            (previous/'bundle.json').write_text(json.dumps({'version':'1.1.0','files':files}))
+            (root/'current').symlink_to(previous)
+            (root/'run/config.json').write_text(json.dumps({'listen':'127.0.0.1:8188','apns_identity_file':'/private/existing'}))
+            (root/'run/installation.json').write_text(json.dumps({'service_name':'test','version':'1.1.0'}))
+            bundle=self._bundle(parent,'1.1.0')
+            old_run,old_backup,old_healthy=manage.run,manage.backup,manage.healthy
+            backups=[]
+            try:
+                manage.run=lambda *a,**k:None
+                manage.backup=lambda *a,**k:backups.append(True)
+                manage.healthy=lambda *a,**k:True
+                manage.upgrade(root,bundle)
+                selected=(root/'current').resolve()
+                self.assertTrue(selected.name.startswith('1.1.0-'))
+                self.assertEqual((previous/'bin/vao-push').read_bytes(),b'old binary')
+                self.assertEqual((selected/'bin/vao-push').read_bytes(),b'new binary')
+                self.assertEqual(json.loads((root/'run/installation.json').read_text())['version'],'1.1.0')
+                manage.upgrade(root,bundle)
+                self.assertEqual((root/'current').resolve(),selected)
+                self.assertEqual(len(backups),1)
+            finally:manage.run,manage.backup,manage.healthy=old_run,old_backup,old_healthy
+
+    def test_same_version_refresh_failure_restores_original_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            parent=Path(directory);root=parent/'root';(root/'run').mkdir(parents=True)
+            previous=root/'releases/1.1.0';(previous/'bin').mkdir(parents=True)
+            (previous/'bin/vao-push').write_bytes(b'old')
+            (previous/'bundle.json').write_text(json.dumps({'version':'1.1.0','files':{'bin/vao-push':hashlib.sha256(b'old').hexdigest()}}))
+            (root/'current').symlink_to(previous)
+            (root/'run/config.json').write_text(json.dumps({'listen':'127.0.0.1:8188','apns_identity_file':'/private/existing'}))
+            (root/'run/installation.json').write_text(json.dumps({'service_name':'test','version':'1.1.0'}))
+            bundle=self._bundle(parent,'1.1.0')
+            old_run,old_backup,old_healthy=manage.run,manage.backup,manage.healthy
+            try:
+                manage.run=lambda *a,**k:None;manage.backup=lambda *a,**k:None
+                manage.healthy=lambda r:(r/'current').resolve()==previous
+                with self.assertRaises(RuntimeError):manage.upgrade(root,bundle)
+                self.assertEqual((root/'current').resolve(),previous)
+                self.assertEqual((previous/'bin/vao-push').read_bytes(),b'old')
+            finally:manage.run,manage.backup,manage.healthy=old_run,old_backup,old_healthy
+
 
 if __name__ == "__main__":
     unittest.main()

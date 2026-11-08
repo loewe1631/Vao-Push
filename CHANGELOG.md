@@ -9,8 +9,9 @@
 - 设计器提供现有节点组成的圆角分组、静态文字胶囊及按字段类型显示的数值设置。
 - 发布前显示布局规模、字段与样式提示以及可能影响本机微调的节点变化；可选检查令牌避免发布已过期的检查结果。
 - 延续 App 1.0.0 / 1.1.0 的现有协议，无需重打包客户端。
+- 安装器支持同版本维护包原地刷新：独立内容目录、备份与健康回退，重复安装完全相同的包不重复切换。旧版 Web 更新器对同版本维护包需使用标准 `--upgrade` 命令刷新。
 
-These source maintenance fixes improve native-preview consistency, schema 2 AI instructions, existing-node compositions, and administrator publication checks. Existing app 1.0.0 and 1.1.0 clients remain supported. Prebuilt downloads remain identified by the assets published on the Release page.
+These source maintenance fixes improve native-preview consistency, schema 2 AI instructions, existing-node compositions, and administrator publication checks. Existing app 1.0.0 and 1.1.0 clients remain supported. The refreshed 1.1.0 packages include these fixes. Earlier 1.1.0 installations can use the standard in-place --upgrade command to refresh without resetting data.
 
 ### 初始发行
 

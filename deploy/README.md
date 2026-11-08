@@ -36,3 +36,6 @@ python3 deploy/package-release.py \
 ## Web系统更新
 
 官方1.1.0及以后标准安装/原地升级自动配置签名更新源、公钥和独立执行器。旧安装使用`install.sh --upgrade --prefix <安装目录>`补齐，无需重装或重置数据。执行器不会在自己的升级任务中被重启，CLI与Web共用实例升级锁。详见PUBLIC-INSTALL.md。
+
+
+同版本维护重建：`manage.py upgrade` 在目标版本目录已存在且内容不同的情况下，使用版本号加内容摘要的新目录，保留原目录供健康失败回退。相同内容已为当前版本时不重复切换。原 `install.sh --upgrade --prefix` 入口可刷新早期同版本安装；旧 Web 更新器不会将同版本重建列为新版本。
