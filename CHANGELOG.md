@@ -1,5 +1,16 @@
 # 更新记录 / Changelog
 
+## 1.1.0
+
+- 新增命名推送列表，支持独立发送地址、设备管理、改名和删除；保留原默认地址。
+- 新增同一卡片的尺寸布局覆盖、固定预览和溢出提示；未声明支持的旧客户端继续读取v1默认布局。
+- API/Web支持逐条指定可选HTTPS图标，旧客户端继续使用原文字消息。
+- 新增签名Web更新与独立本机执行器；首次安装及一次保留数据的`--upgrade`自动启用，之后通过页面检查并确认升级。
+- 保留App 1.0.0的已有接入、消息同步和卡片订阅能力。服务端升级不要求手机同步升级。
+- 本次为服务端/Web发行；需要新客户端的原生呈现功能随支持客户端提供。
+
+Named push lists, per-size card layouts, optional notification icon metadata, signed Web updates and automatic updater setup during fresh installation/in-place upgrades. Existing app 1.0.0 features remain supported. This is a server/Web release; new native presentation features require a supporting app version.
+
 ## 1.0.0
 
 - Linux amd64、arm64 预构建服务端安装包，安装时自动配置官方客户端的 Production APNs 身份。

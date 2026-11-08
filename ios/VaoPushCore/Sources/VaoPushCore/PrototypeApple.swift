@@ -56,7 +56,7 @@ public struct PrototypeCardView: View {
 
     public var body: some View {
         if let remote = card.remote {
-            PublishedCardView(remote: remote, state: snapshot, rowLimit: fieldLimit == 2 ? 1 : compact ? 3 : expanded ? 12 : 6)
+            PublishedCardView(remote: remote, state: snapshot, rowLimit: fieldLimit == 2 ? 1 : compact ? 3 : expanded ? 12 : 6, family: fieldLimit == 2 ? "small" : compact ? "medium" : fieldLimit == 20 ? "extraLarge" : expanded ? "large" : "medium")
                 .environment(\.colorScheme, card.theme == .dark ? .dark : card.theme == .light ? .light : colorScheme)
         } else {
         VStack(alignment: .leading, spacing: compact ? 7 : 10) {

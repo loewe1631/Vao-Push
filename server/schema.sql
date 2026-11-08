@@ -17,6 +17,9 @@ CREATE INDEX IF NOT EXISTS device_keys_owner ON device_keys(owner_id);
 
 CREATE TABLE IF NOT EXISTS message_routes (user_id text PRIMARY KEY REFERENCES users(id), key_hash text UNIQUE NOT NULL REFERENCES credentials(hash), secret bytea NOT NULL, devices jsonb NOT NULL, revision bigint NOT NULL DEFAULT 1);
 
+CREATE TABLE IF NOT EXISTS named_message_routes (id text PRIMARY KEY, user_id text NOT NULL REFERENCES users(id), name text NOT NULL, key_hash text UNIQUE NOT NULL REFERENCES credentials(hash), secret bytea NOT NULL, devices jsonb NOT NULL, revision bigint NOT NULL DEFAULT 1);
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS icon text NOT NULL DEFAULT '';
+
 CREATE TABLE IF NOT EXISTS card_sources (id text PRIMARY KEY, user_id text NOT NULL REFERENCES users(id), stream_id text UNIQUE NOT NULL REFERENCES streams(id), name text NOT NULL, mode text NOT NULL, config bytea NOT NULL, ingress bytea NOT NULL, interval_seconds integer NOT NULL DEFAULT 300, next_poll timestamptz NOT NULL DEFAULT now(), last_success timestamptz, last_error text, enabled boolean NOT NULL DEFAULT true);
 CREATE TABLE IF NOT EXISTS card_templates (id text PRIMARY KEY, user_id text NOT NULL REFERENCES users(id), source_id text NOT NULL REFERENCES card_sources(id), draft jsonb NOT NULL, draft_revision bigint NOT NULL DEFAULT 1, published jsonb, revision bigint NOT NULL DEFAULT 0, updated_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS card_import_codes (hash text PRIMARY KEY, card_id text NOT NULL REFERENCES card_templates(id), expires_at timestamptz NOT NULL, uses integer NOT NULL DEFAULT 0, max_uses integer NOT NULL DEFAULT 10, revoked boolean NOT NULL DEFAULT false);

@@ -66,7 +66,9 @@ public enum ProtocolRules {
             try remote.design.validate()
             guard remote.adjustments.nodes.count <= 64, remote.adjustments.name?.utf8.count ?? 0 <= 128,
                   ["system", "light", "dark"].contains(remote.adjustments.theme ?? "system") else { throw CoreError.invalid("本机微调配置无效") }
-            for adjustment in remote.adjustments.nodes.values {
+            let families=remote.adjustments.familyNodes ?? [:]
+            guard families.count<=4, families.keys.allSatisfy({ ["small","medium","large","extraLarge"].contains($0) }),families.values.allSatisfy({ $0.count<=64 }) else { throw CoreError.invalid("本机尺寸微调无效") }
+            for adjustment in Array(remote.adjustments.nodes.values)+families.values.flatMap({Array($0.values)}) {
                 guard (adjustment.label?.utf8.count ?? 0) <= 96,
                       adjustment.decimals.map({ (0...18).contains($0) }) ?? true,
                       adjustment.fontSize.map({ (10...32).contains($0) }) ?? true else { throw CoreError.invalid("本机微调超出范围") }

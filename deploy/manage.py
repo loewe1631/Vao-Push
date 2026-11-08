@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Manage one installed Vao Push instance without regenerating its identity."""
 import argparse
+import fcntl
+from contextlib import contextmanager
 from datetime import datetime,timezone
 import hashlib
 import json
@@ -39,7 +41,10 @@ def healthy(root):
     for _ in range(20):
         try:
             with urllib.request.urlopen('http://127.0.0.1:'+port+'/healthz',timeout=2) as response:
-                if response.status==200:return True
+                if response.status==200:
+                    data=json.load(response).get('data',{})
+                    expected=json.loads((root/'current/bundle.json').read_text())['version']
+                    if data.get('status')=='ok' and (data.get('server_version')==expected or expected=='1.0.0' and data.get('server_version') is None):return True
         except Exception:time.sleep(1)
     return False
 
@@ -74,10 +79,21 @@ def prepare_packaged_identity(root,bundle,manifest,config):
 
 def restore_config(path,raw,owner):
     path.write_bytes(raw)
-    path.chmod(0o600)
+    path.chmod(owner.st_mode & 0o777)
     os.chown(path,owner.st_uid,owner.st_gid)
 
+@contextmanager
+def upgrade_lock(root):
+    with (root/'run/upgrade.lock').open('a') as lock:
+        try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:raise RuntimeError('Another upgrade is running')
+        try:yield
+        finally:fcntl.flock(lock,fcntl.LOCK_UN)
+
 def upgrade(root,bundle):
+    with upgrade_lock(root):return upgrade_locked(root,bundle)
+
+def upgrade_locked(root,bundle):
     manifest=validate_bundle(bundle)
     import re
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,79}',manifest['version']):raise RuntimeError('Invalid release version')
@@ -93,12 +109,17 @@ def upgrade(root,bundle):
     shutil.copytree(bundle,target)
     target.chmod(0o755)
     (target/'bin/vao-push').chmod(0o755)
+    for directory in [target/'bin',target/'web']:
+        if directory.exists():
+            directory.chmod(0o755)
+            for path in directory.rglob('*'):
+                path.chmod(0o755 if path.is_dir() or path==target/'bin/vao-push' else 0o644)
     try:
         identity_target=prepare_packaged_identity(root,target,manifest,config)
         if identity_target:
             temporary=config_path.with_name(config_path.name+'.next')
             temporary.write_text(json.dumps(config,ensure_ascii=False,indent=2)+'\n')
-            temporary.chmod(0o600)
+            temporary.chmod(config_owner.st_mode & 0o777)
             os.chown(temporary,config_owner.st_uid,config_owner.st_gid)
             os.replace(temporary,config_path)
             config_changed=True
@@ -112,6 +133,9 @@ def upgrade(root,bundle):
     try:
         run(['systemctl','stop',service(root)+'.service'])
         next_link=root/'current.next';next_link.symlink_to(target);os.replace(next_link,root/'current')
+        if manifest.get('web_updates'):
+            configure_web_updates(root,target)
+            config_changed=True
         run(['systemctl','start',service(root)+'.service'])
         if not healthy(root):raise RuntimeError('New version did not pass health check')
     except BaseException:
@@ -119,15 +143,23 @@ def upgrade(root,bundle):
             (root/'current.previous').symlink_to(previous);os.replace(root/'current.previous',root/'current')
         elif not (root/'current').exists():
             (root/'current').symlink_to(previous)
-        if config_changed:
-            restore_config(config_path,original_config,config_owner)
+        restore_config(config_path,original_config,config_owner)
+        if identity_target:
             identity_target.unlink(missing_ok=True)
         run(['systemctl','restart',service(root)+'.service'])
-        print('The previous program was restored. Database backups are available; database migrations are not automatically reversed.')
+        if not healthy(root):raise RuntimeError('Previous program selected but recovery health check failed; inspect the service before retrying')
+        print('The previous program was restored and passed its health check. Database migrations are not automatically reversed.')
         raise
+    metadata_path=root/'run/installation.json';metadata_owner=metadata_path.stat()
     metadata=load(root);metadata['version']=manifest['version']
-    (root/'run/installation.json').write_text(json.dumps(metadata,indent=2)+'\n');(root/'run/installation.json').chmod(0o600)
+    metadata_path.write_text(json.dumps(metadata,indent=2)+'\n');metadata_path.chmod(metadata_owner.st_mode&0o777)
     print('Upgraded to '+manifest['version']+'. Existing ports, password, server identity, data, and encryption key were kept.')
+
+def configure_web_updates(root,bundle):
+    import importlib.util
+    spec=importlib.util.spec_from_file_location('vao_update_setup',bundle/'install-update-agent.py')
+    setup=importlib.util.module_from_spec(spec);spec.loader.exec_module(setup)
+    return setup.configure(root,bundle,activate=True)
 
 def restore_check(root,source):
     name='vao_restore_check_'+uuid.uuid4().hex

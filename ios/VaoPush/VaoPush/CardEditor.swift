@@ -115,6 +115,16 @@ struct CardEditor: View {
         draft.fields += keys.filter { !existing.contains($0) }.map { FieldBinding(key: $0, visible: false) }
     }
 
+    private var currentFamily: String { ["small","medium","large","extraLarge"][previewSize] }
+    private var currentAdjustments: [String: NodeAdjustment] {
+        guard let remote=draft.remote else { return [:] }
+        return remote.adjustments.nodes(for: currentFamily, design: remote.design)
+    }
+    private func setAdjustment(_ value: NodeAdjustment, id: String) {
+        guard let remote=draft.remote else { return }
+        if remote.design.schemaVersion == 1 { draft.remote?.adjustments.nodes[id]=value }
+        else { var all=remote.adjustments.familyNodes ?? [:]; var values=all[currentFamily] ?? [:];values[id]=value;all[currentFamily]=values;draft.remote?.adjustments.familyNodes=all }
+    }
     @ViewBuilder private var settingsSections: some View {
         if let remote = draft.remote {
             Section(VaoL10n.text("Web订阅卡片 · 第{0}版", String(describing: remote.revision))) {
@@ -132,16 +142,16 @@ struct CardEditor: View {
                 Text(VaoL10n.text("本机微调不影响Web或其他设备；未微调的内容继续跟随已发布设计。"))
                     .font(.footnote).foregroundStyle(.secondary)
             }
-            ForEach(remote.design.nodes.filter { ["text", "number", "badge", "chart"].contains($0.type) }) { node in
+            ForEach(remote.design.nodes(for: currentFamily).filter { ["text", "number", "badge", "chart"].contains($0.type) }) { node in
                 Section(node.label ?? node.bind ?? node.text ?? node.id) {
-                    Toggle(VaoL10n.text("显示组件"), isOn: Binding(get: { draft.remote?.adjustments.nodes[node.id]?.hidden != true }, set: { value in
-                        var adjustment = draft.remote?.adjustments.nodes[node.id] ?? NodeAdjustment(); adjustment.hidden = !value
-                        draft.remote?.adjustments.nodes[node.id] = adjustment
+                    Toggle(VaoL10n.text("显示组件"), isOn: Binding(get: { currentAdjustments[node.id]?.hidden != true }, set: { value in
+                        var adjustment = currentAdjustments[node.id] ?? NodeAdjustment(); adjustment.hidden = !value
+                        setAdjustment(adjustment, id: node.id)
                     }))
                     if node.type != "chart" {
-                    TextField(VaoL10n.text("本机显示名称（留空跟随Web）"), text: Binding(get: { draft.remote?.adjustments.nodes[node.id]?.label ?? "" }, set: { value in
-                        var adjustment = draft.remote?.adjustments.nodes[node.id] ?? NodeAdjustment(); adjustment.label = value.isEmpty ? nil : value
-                        draft.remote?.adjustments.nodes[node.id] = adjustment
+                    TextField(VaoL10n.text("本机显示名称（留空跟随Web）"), text: Binding(get: { currentAdjustments[node.id]?.label ?? "" }, set: { value in
+                        var adjustment = currentAdjustments[node.id] ?? NodeAdjustment(); adjustment.label = value.isEmpty ? nil : value
+                        setAdjustment(adjustment, id: node.id)
                     })).accessibilityIdentifier("web-alias-" + node.id)
                     if node.type == "number" || node.type == "badge" {
                     Picker(VaoL10n.text("小数位"), selection: adjustment(node.id, \.decimals)) {
@@ -154,7 +164,7 @@ struct CardEditor: View {
                         ForEach([10,12,14,16,18,20,24,28,32], id: \.self) { Text("\($0)").tag(Optional($0)) }
                     }
                     }
-                    Button(VaoL10n.text("此组件恢复跟随Web")) { draft.remote?.adjustments.nodes.removeValue(forKey: node.id) }
+                    Button(VaoL10n.text("此组件恢复跟随Web")) { setAdjustment(NodeAdjustment(), id: node.id) }
                 }
             }
             Section { Button(VaoL10n.text("保存微调")) { save() }.accessibilityIdentifier("save-web-adjustments") }
@@ -162,9 +172,9 @@ struct CardEditor: View {
     }
 
     private func adjustment(_ id: String, _ path: WritableKeyPath<NodeAdjustment, Int?>) -> Binding<Int?> {
-        Binding(get: { draft.remote?.adjustments.nodes[id]?[keyPath: path] }, set: { value in
-            var adjustment = draft.remote?.adjustments.nodes[id] ?? NodeAdjustment(); adjustment[keyPath: path] = value
-            draft.remote?.adjustments.nodes[id] = adjustment
+        Binding(get: { currentAdjustments[id]?[keyPath: path] }, set: { value in
+            var adjustment = currentAdjustments[id] ?? NodeAdjustment(); adjustment[keyPath: path] = value
+            setAdjustment(adjustment, id: id)
         })
     }
 

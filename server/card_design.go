@@ -8,11 +8,12 @@ import (
 )
 
 type CardDesign struct {
-	Version int        `json:"schema_version"`
-	Name    string     `json:"name"`
-	Family  string     `json:"family"`
-	Theme   string     `json:"theme,omitempty"`
-	Layout  LayoutNode `json:"layout"`
+	Version int                   `json:"schema_version"`
+	Name    string                `json:"name"`
+	Family  string                `json:"family"`
+	Theme   string                `json:"theme,omitempty"`
+	Layout  LayoutNode            `json:"layout"`
+	Layouts map[string]LayoutNode `json:"layouts,omitempty"`
 }
 type LayoutNode struct {
 	ID         string       `json:"id"`
@@ -49,7 +50,7 @@ func validColor(s string) bool {
 func validateDesign(raw []byte) (CardDesign, error) {
 	var d CardDesign
 	fail := func(path, msg string) (CardDesign, error) { return d, bad("invalid_design", path+": "+msg) }
-	if len(raw) > 24576 {
+	if len(raw) > 65536 {
 		return fail("$", "卡片代码最多24KiB。")
 	}
 	dec := json.NewDecoder(bytes.NewReader(raw))
@@ -57,8 +58,32 @@ func validateDesign(raw []byte) (CardDesign, error) {
 	if e := dec.Decode(&d); e != nil {
 		return fail("$", e.Error())
 	}
-	if d.Version != 1 || len(d.Name) < 1 || len(d.Name) > 120 || !contains([]string{"small", "medium", "large", "extraLarge"}, d.Family) || !contains([]string{"", "system", "light", "dark"}, d.Theme) {
+	if (d.Version != 1 && d.Version != 2) || len(d.Name) < 1 || len(d.Name) > 120 || !contains([]string{"small", "medium", "large", "extraLarge"}, d.Family) || !contains([]string{"", "system", "light", "dark"}, d.Theme) {
 		return fail("$", "请检查版本、名称、尺寸与主题。")
+	}
+	if d.Version == 1 && (len(raw) > 24576 || len(d.Layouts) > 0) {
+		return fail("$", "v1最多24KiB且不接收尺寸布局。")
+	}
+	if len(d.Layouts) > 4 {
+		return fail("$.layouts", "至多四种尺寸。")
+	}
+	if d.Version == 2 {
+		legacy := d
+		legacy.Version = 1
+		legacy.Layouts = nil
+		if _, e := validateDesign(canonical(legacy)); e != nil {
+			return fail("$.layout", "默认布局不兼容旧客户端："+e.Error())
+		}
+		for family, layout := range d.Layouts {
+			if !contains([]string{"small", "medium", "large", "extraLarge"}, family) {
+				return fail("$.layouts", "未知尺寸。")
+			}
+			variant := legacy
+			variant.Layout = layout
+			if _, e := validateDesign(canonical(variant)); e != nil {
+				return fail("$.layouts."+family, e.Error())
+			}
+		}
 	}
 	seen := map[string]bool{}
 	count := 0

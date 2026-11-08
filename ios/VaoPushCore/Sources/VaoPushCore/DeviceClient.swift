@@ -15,12 +15,13 @@ public struct DeviceCredentials: Codable, Sendable {
 }
 
 public struct SyncedMessage: Codable, Sendable {
+    public var icon: String? = nil
     public var messageID: String
     public var title: String
     public var body: String
     public var receivedAt: String
-    public var archived: ArchivedMessage { ArchivedMessage(id: messageID, title: title, body: body, receivedAt: receivedAt) }
-    enum CodingKeys: String, CodingKey { case messageID = "message_id", receivedAt = "received_at"; case title, body }
+    public var archived: ArchivedMessage { ArchivedMessage(id: messageID, title: title, body: body, receivedAt: receivedAt, icon: icon) }
+    enum CodingKeys: String, CodingKey { case messageID = "message_id", receivedAt = "received_at"; case title, body, icon }
 }
 
 public struct DeviceSyncPage: Codable, Sendable {

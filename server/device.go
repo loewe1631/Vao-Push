@@ -25,8 +25,9 @@ type MessageRequest struct {
 		Level string `json:"level"`
 		Sound string `json:"sound"`
 	} `json:"notification"`
-	URL string `json:"url,omitempty"`
-	TTL int    `json:"ttl_seconds,omitempty"`
+	URL  string `json:"url,omitempty"`
+	Icon string `json:"icon,omitempty"`
+	TTL  int    `json:"ttl_seconds,omitempty"`
 }
 
 func (a *App) message(w http.ResponseWriter, r *http.Request) error {
@@ -102,6 +103,9 @@ func (a *App) message(w http.ResponseWriter, r *http.Request) error {
 	if b.Version != 1 || strings.TrimSpace(b.Body) == "" || len(b.Body) > 2500 || len(b.Title) > 200 || b.TTL < 1 || b.TTL > 86400 || (targetCount != 1 && !(p.Kind == "channel" && targetCount == 0)) || !contains([]string{"active", "passive"}, b.Notification.Level) || !contains([]string{"default", "none"}, b.Notification.Sound) || (b.URL != "" && (!validHTTPS(b.URL) || len(b.URL) > 1024)) {
 		return bad("invalid_message", "请检查消息、目标、通知选项与有效期。")
 	}
+	if b.Icon != "" && (!validHTTPS(b.Icon) || len(b.Icon) > 1024) {
+		return bad("invalid_icon", "图标须为HTTPS图片地址，最多1024字节。")
+	}
 	target := b.Target.Device
 	if target == "" {
 		target = b.Target.Group
@@ -117,7 +121,17 @@ func (a *App) message(w http.ResponseWriter, r *http.Request) error {
 	defer tx.Rollback(ctx)
 	h := hash(string(canonical(b)))
 	key := r.Header.Get("Idempotency-Key")
-	st, replay, e := idemBegin(ctx, tx, p, "message", key, h)
+	operation := "message"
+	if p.Kind == "channel" {
+		var named bool
+		if e = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM named_message_routes WHERE user_id=$1 AND key_hash=$2)", p.User, hash(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "))).Scan(&named); e != nil {
+			return e
+		}
+		if named {
+			operation += "/" + hash(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "))
+		}
+	}
+	st, replay, e := idemBegin(ctx, tx, p, operation, key, h)
 	if e != nil {
 		return e
 	}
@@ -128,10 +142,15 @@ func (a *App) message(w http.ResponseWriter, r *http.Request) error {
 	list := []string{}
 	owners := map[string]string{}
 	if b.Target.All || p.Kind == "channel" {
+		if p.Kind == "channel" {
+			if e = txLock(ctx, tx, p.User+":message-route"); e != nil {
+				return e
+			}
+		}
 		var routeDevices []string
 		if p.Kind == "channel" {
 			var raw []byte
-			err := tx.QueryRow(ctx, "SELECT devices FROM message_routes WHERE user_id=$1 AND key_hash=$2 FOR SHARE", p.User, hash(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "))).Scan(&raw)
+			err := tx.QueryRow(ctx, "SELECT devices FROM message_routes WHERE user_id=$1 AND key_hash=$2 UNION ALL SELECT devices FROM named_message_routes WHERE user_id=$1 AND key_hash=$2", p.User, hash(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "))).Scan(&raw)
 			if err == pgx.ErrNoRows {
 				return unauthorized()
 			}
@@ -238,7 +257,7 @@ func (a *App) message(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 	message, now := id("msg_"), time.Now().UTC()
-	_, e = tx.Exec(ctx, "INSERT INTO messages(id,user_id,title,body,received_at,notification,url) VALUES($1,$2,$3,$4,$5,$6,$7)", message, p.User, b.Title, b.Body, now, canonical(b.Notification), b.URL)
+	_, e = tx.Exec(ctx, "INSERT INTO messages(id,user_id,title,body,received_at,notification,url,icon) VALUES($1,$2,$3,$4,$5,$6,$7,$8)", message, p.User, b.Title, b.Body, now, canonical(b.Notification), b.URL, b.Icon)
 	if e != nil {
 		return e
 	}
@@ -250,6 +269,9 @@ func (a *App) message(w http.ResponseWriter, r *http.Request) error {
 		push := map[string]any{"version": 1, "kind": "message", "server_id": a.cfg.ID, "account_id": owners[d], "binding_id": d, "message_id": message, "received_at": stamp(now)}
 		if b.URL != "" {
 			push["url"] = b.URL
+		}
+		if b.Icon != "" {
+			push["icon"] = b.Icon
 		}
 		payload := canonical(map[string]any{"aps": aps, "vao_push": push})
 		if len(payload) > 4096 {
@@ -263,7 +285,7 @@ func (a *App) message(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 	response := map[string]any{"data": map[string]any{"message_id": message, "status": "queued", "target_count": len(targets), "received_at": stamp(now)}}
-	if e = idemSave(ctx, tx, p, "message", key, h, 202, response); e != nil {
+	if e = idemSave(ctx, tx, p, operation, key, h, 202, response); e != nil {
 		return e
 	}
 	if e = tx.Commit(ctx); e != nil {
@@ -301,7 +323,7 @@ func (a *App) syncDevice(w http.ResponseWriter, r *http.Request) error {
 	if e != nil {
 		return e
 	}
-	messages, e := rowsJSON(ctx, tx, "SELECT m.seq,m.id AS message_id,m.title,m.body,m.received_at FROM messages m JOIN message_targets t ON m.id=t.message_id WHERE t.device_id=$1 AND m.seq>$2 ORDER BY m.seq LIMIT 101", p.Device, cursor)
+	messages, e := rowsJSON(ctx, tx, "SELECT m.seq,m.id AS message_id,m.title,m.body,m.received_at,m.icon FROM messages m JOIN message_targets t ON m.id=t.message_id WHERE t.device_id=$1 AND m.seq>$2 ORDER BY m.seq LIMIT 101", p.Device, cursor)
 	if e != nil {
 		return e
 	}

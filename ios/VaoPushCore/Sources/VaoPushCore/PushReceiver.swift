@@ -19,7 +19,7 @@ public enum PushReceiver {
             guard let id = push.messageID, let received = push.receivedAt else {
                 throw CoreError.invalid("消息缺少身份或时间")
             }
-            try store.archive(ArchivedMessage(id: id, title: title, body: body, receivedAt: received), owner: owner ?? boundAccount)
+            try store.archive(ArchivedMessage(id: id, title: title, body: body, receivedAt: received, icon: push.icon), owner: owner ?? boundAccount)
             return .message
         case "widget_state":
             guard let snapshot = push.snapshot else { throw CoreError.invalid("推送缺少快照") }
@@ -61,8 +61,9 @@ public enum PushReceiver {
         var messageID: String?
         var receivedAt: String?
         var snapshot: StateSnapshot?
+        var icon: String?
         enum CodingKeys: String, CodingKey {
-            case version, kind, snapshot
+            case version, kind, snapshot, icon
             case accountID = "account_id", messageID = "message_id", receivedAt = "received_at"
             case serverID = "server_id", bindingID = "binding_id"
         }

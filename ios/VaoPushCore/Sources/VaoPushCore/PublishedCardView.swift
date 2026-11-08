@@ -5,10 +5,11 @@ struct PublishedCardView: View {
     let remote: RemoteCard
     let state: StateSnapshot
     let rowLimit: Int
+    let family: String
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             if remote.available {
-                CardNodeView(node: remote.design.layout, state: state.state, item: nil, adjustments: remote.adjustments.nodes, rowLimit: rowLimit)
+                CardNodeView(node: remote.design.layout(for: family), state: state.state, item: nil, adjustments: remote.adjustments.nodes(for: family, design: remote.design), rowLimit: rowLimit)
                 Spacer(minLength: 0)
                 HStack(spacing: 4) {
                     Text(state.isExpired(at: .now) ? VaoL10n.text("已过期 ·") : VaoL10n.text("更新"))

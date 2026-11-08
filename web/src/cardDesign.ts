@@ -24,11 +24,12 @@ export type Node = {
   row?: Node;
 };
 export type Design = {
-  schema_version: 1;
+  schema_version: 1 | 2;
   name: string;
   family: string;
   theme?: string;
   layout: Node;
+  layouts?: Partial<Record<string, Node>>;
 };
 export const kinds = [
   "row",

@@ -6,17 +6,30 @@ public struct CardDesign: Codable, Equatable, Sendable {
     public var family: String
     public var theme: String?
     public var layout: CardNode
-    enum CodingKeys: String, CodingKey { case schemaVersion = "schema_version"; case name, family, theme, layout }
+    public var layouts: [String: CardNode]? = nil
+    enum CodingKeys: String, CodingKey { case schemaVersion = "schema_version"; case name, family, theme, layout, layouts }
 
+    public func layout(for family: String) -> CardNode { layouts?[family] ?? layout }
+    public func nodes(for family: String) -> [CardNode] { var value=self;value.layout=layout(for: family);return value.nodes }
+    public var legacy: CardDesign { var value=self;value.schemaVersion=1;value.layouts=nil;return value }
     public var nodes: [CardNode] {
         func flatten(_ n: CardNode) -> [CardNode] { [n] + (n.children ?? []).flatMap(flatten) + (n.row.map { flatten($0.node) } ?? []) }
         return flatten(layout)
     }
     public func validate() throws {
-        guard schemaVersion == 1, !name.isEmpty, name.utf8.count <= 120,
+        guard [1, 2].contains(schemaVersion), !name.isEmpty, name.utf8.count <= 120,
               ["small", "medium", "large", "extraLarge"].contains(family),
               ["system", "light", "dark"].contains(theme ?? "system"),
-              try JSONEncoder().encode(self).count <= 24576 else { throw CoreError.invalid("不支持的卡片版本、尺寸或内容大小") }
+              try JSONEncoder().encode(self).count <= (schemaVersion == 1 ? 24576 : 65536) else { throw CoreError.invalid("不支持的卡片版本、尺寸或内容大小") }
+        guard schemaVersion == 2 || layouts == nil || layouts?.isEmpty == true else { throw CoreError.invalid("旧版布局不支持尺寸覆盖") }
+        if schemaVersion == 2 {
+            try legacy.validate()
+            guard (layouts?.count ?? 0) <= 4 else { throw CoreError.invalid("尺寸覆盖过多") }
+            for (family, layout) in layouts ?? [:] {
+                guard ["small","medium","large","extraLarge"].contains(family) else { throw CoreError.invalid("未知布局尺寸") }
+                var variant=legacy;variant.layout=layout;try variant.validate()
+            }
+        }
         var ids = Set<String>(), count = 0
         func visit(_ n: CardNode, depth: Int) throws {
             count += 1
@@ -83,6 +96,11 @@ public struct CardAdjustments: Codable, Equatable, Sendable {
     public var name: String?
     public var theme: String?
     public var nodes: [String: NodeAdjustment] = [:]
+    public var familyNodes: [String: [String: NodeAdjustment]]? = nil
+    public func nodes(for family: String, design: CardDesign) -> [String: NodeAdjustment] {
+        let base = design.layouts?[family] == nil ? nodes : [:]
+        return base.merging(familyNodes?[family] ?? [:]) { _, custom in custom }
+    }
     public init() {}
 }
 public struct RemoteCard: Codable, Equatable, Sendable {
@@ -109,11 +127,17 @@ public struct SubscribedCard: Codable, Equatable, Sendable {
             guard previous.id == cardID, card.streamID == snapshot.streamID else { throw CoreError.streamIdentityChanged }
             let incoming = try ProtocolRules.revision(revision), current = try ProtocolRules.revision(previous.revision)
             guard incoming >= current else { return card }
-            if incoming == current && previous.design != design { throw CoreError.conflictingRevision }
+            if incoming == current && previous.design != design && previous.design != design.legacy && previous.design.legacy != design { throw CoreError.conflictingRevision }
+            if incoming == current && previous.design.schemaVersion == 2 && design.schemaVersion == 1 { return card }
             let old = Dictionary(uniqueKeysWithValues: previous.design.nodes.map { ($0.id, $0.type) })
             let next = Dictionary(uniqueKeysWithValues: design.nodes.map { ($0.id, $0.type) })
             for id in previous.adjustments.nodes.keys where old[id] != next[id] {
                 throw CoreError.invalid("新版结构改变了已微调的组件；保留原设计，可恢复跟随Web后更新。")
+            }
+            for (family, adjustments) in previous.adjustments.familyNodes ?? [:] {
+                let old = Dictionary(uniqueKeysWithValues: previous.design.nodes(for: family).map { ($0.id,$0.type) })
+                let next = Dictionary(uniqueKeysWithValues: design.nodes(for: family).map { ($0.id,$0.type) })
+                for (id, adjustment) in adjustments where adjustment != NodeAdjustment() && old[id] != next[id] { throw CoreError.invalid("新版结构改变了此尺寸已微调组件；请处理冲突后重试。") }
             }
             card.remote?.revision = revision; card.remote?.design = design; card.remote?.available = true; card.remote?.issue = nil
         } else { card.remote = RemoteCard(id: cardID, revision: revision, design: design) }
@@ -169,7 +193,7 @@ public final class CardClient: Sendable {
         let base = try ServerConnection.endpoint(base.absoluteString)
         guard token.range(of: "^[a-fA-F0-9]{64}$", options: .regularExpression) != nil else { throw DeviceClientError.invalidResponse }
         var r = URLRequest(url: base.appendingPathComponent(path)); r.httpMethod = method
-        r.setValue("Bearer " + token, forHTTPHeaderField: "Authorization"); r.setValue("application/json", forHTTPHeaderField: "Accept")
+        r.setValue("Bearer " + token, forHTTPHeaderField: "Authorization"); r.setValue("application/json", forHTTPHeaderField: "Accept"); r.setValue("2", forHTTPHeaderField: "X-Vao-Card-Schema")
         if let body { r.httpBody = try JSONEncoder().encode(body); r.setValue("application/json", forHTTPHeaderField: "Content-Type") }
         let (data, response) = try await session.data(for: r)
         guard let http = response as? HTTPURLResponse, data.count <= 128 * 1024,

@@ -1,0 +1,9 @@
+{
+  "feed_url": "https://github.com/loewe1631/Vao-Push/releases/latest/download/updates.json",
+  "public_key_file": "release-signing.pub",
+  "allowed_hosts": [
+    "github.com",
+    "release-assets.githubusercontent.com",
+    "objects.githubusercontent.com"
+  ]
+}

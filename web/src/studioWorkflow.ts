@@ -249,7 +249,9 @@ export function parseSourceAssistant(
       "The model result is not valid JSON.",
     );
   }
-  const name = String(value.name || "").trim().slice(0, 40);
+  const name = String(value.name || "")
+    .trim()
+    .slice(0, 40);
   if (!name)
     assistantFail(
       lang,
@@ -274,7 +276,11 @@ export function parseSourceAssistant(
       "记录路径或项目标识路径无效。",
       "The record path or item ID path is invalid.",
     );
-  if (!Array.isArray(value.fields) || value.fields.length < 1 || value.fields.length > 32)
+  if (
+    !Array.isArray(value.fields) ||
+    value.fields.length < 1 ||
+    value.fields.length > 32
+  )
     assistantFail(
       lang,
       "需要 1 至 32 个字段映射。",
@@ -339,5 +345,7 @@ export function missingBindings(design: Design, state: any): string[] {
     if (node.row) visit(node.row, state?.items?.[0]);
   }
   visit(design.layout, state);
+  for (const layout of Object.values(design.layouts || {}))
+    if (layout) visit(layout, state);
   return [...new Set(missing)];
 }

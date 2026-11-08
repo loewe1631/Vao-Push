@@ -130,6 +130,11 @@ public final class SharedStore: @unchecked Sendable {
                     for (id, value) in edited.adjustments.nodes where value != NodeAdjustment() && oldTypes[id] != newTypes[id] {
                         throw CoreError.invalid("Web设计已变化，保留当前草稿；请恢复该组件跟随Web后重试。")
                     }
+                    for (family, adjustments) in edited.adjustments.familyNodes ?? [:] {
+                        let old = Dictionary(uniqueKeysWithValues: edited.design.nodes(for: family).map { ($0.id,$0.type) })
+                        let next = Dictionary(uniqueKeysWithValues: base.design.nodes(for: family).map { ($0.id,$0.type) })
+                        for (id, adjustment) in adjustments where adjustment != NodeAdjustment() && old[id] != next[id] { throw CoreError.invalid("此尺寸Web设计已变化，请处理微调冲突后保存。") }
+                    }
                     base.adjustments = edited.adjustments; updated.remote = base
                     updated.name = base.adjustments.name ?? base.design.name
                     updated.theme = CardConfiguration.Theme(rawValue: base.adjustments.theme ?? base.design.theme ?? "system")

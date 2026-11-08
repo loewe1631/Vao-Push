@@ -29,6 +29,9 @@ import {
 } from "./cardDesign";
 import { locale, resolvedTheme, tr, localizeErrorMessage } from "./i18n";
 const props = defineProps<{ csrf: string }>();
+function familyTitle(value: string) {
+  return ({small:tr("小尺寸","Small"),medium:tr("中尺寸","Medium"),large:tr("大尺寸","Large"),extraLarge:tr("超大尺寸","Extra Large")} as Record<string,string>)[value] || value;
+}
 function revisionLabel(value: string | number) {
   return locale.value === "en" ? `Rev ${value}` : `第${value}版`;
 }
@@ -147,7 +150,7 @@ const filteredCards = computed(() =>
   ),
 );
 const leaves = computed(() =>
-  allNodes(design.value.layout).filter((n) =>
+  allNodes(editingLayout.value).filter((n) =>
     ["text", "number", "badge", "chart"].includes(n.type),
   ),
 );
@@ -226,9 +229,9 @@ function replaceLayout(kind: string) {
     locale.value,
   );
   selectedID.value =
-    allNodes(design.value.layout).find((n) =>
+    allNodes(editingLayout.value).find((n) =>
       ["text", "number", "badge"].includes(n.type),
-    )?.id || design.value.layout.id;
+    )?.id || editingLayout.value.id;
 }
 async function startDesign() {
   await action(async () => {
@@ -308,9 +311,9 @@ async function startDesign() {
       locale.value,
     );
     selectedID.value =
-      allNodes(design.value.layout).find((n) =>
+      allNodes(editingLayout.value).find((n) =>
         ["text", "number", "badge"].includes(n.type),
-      )?.id || design.value.layout.id;
+      )?.id || editingLayout.value.id;
     code.value = currentCode();
     codeDirty.value = false;
     mode.value = "visual";
@@ -411,13 +414,77 @@ const source = computed(() =>
   sources.value.find((s) => s.id === sourceID.value),
 );
 const node = computed(() =>
-  allNodes(design.value.layout).find((n) => n.id === selectedID.value),
+  allNodes(editingLayout.value).find((n) => n.id === selectedID.value),
 );
 const previewFamily = ref("medium");
+const editFamily = ref("default");
+const editingLayout = computed<Node>({
+  get: () =>
+    editFamily.value === "default"
+      ? design.value.layout
+      : design.value.layouts![editFamily.value]!,
+  set: (value) => {
+    if (editFamily.value === "default") design.value.layout = value;
+    else design.value.layouts![editFamily.value] = value;
+  },
+});
+watch(previewFamily, (family) => {
+  editFamily.value = design.value.layouts?.[family] ? family : "default";
+  selectedID.value = editingLayout.value.id;
+});
+function copyLayoutToSize() {
+  const family = previewFamily.value;
+  if (
+    design.value.layouts?.[family] &&
+    !window.confirm(
+      tr(
+        "替换此尺寸的独立布局？其他尺寸保留。",
+        "Replace this size layout? Other sizes are kept.",
+      ),
+    )
+  )
+    return;
+  const layout = JSON.parse(JSON.stringify(editingLayout.value));
+  design.value.schema_version = 2;
+  design.value.layouts = { ...design.value.layouts, [family]: layout };
+  editFamily.value = family;
+  selectedID.value = layout.id;
+  code.value = currentCode();
+}
+function restoreDefaultLayout() {
+  const family = previewFamily.value;
+  if (
+    !design.value.layouts?.[family] ||
+    !window.confirm(
+      tr(
+        "删除此尺寸覆盖，恢复使用默认布局？",
+        "Remove this override and use the default layout?",
+      ),
+    )
+  )
+    return;
+  delete design.value.layouts[family];
+  editFamily.value = "default";
+  selectedID.value = design.value.layout.id;
+  code.value = currentCode();
+}
+
 const previewState = computed(
   () => source.value?.state || neutralState(locale.value),
 );
 const isSample = computed(() => !source.value?.state);
+const canvas = ref<HTMLElement | null>(null),
+  overflowed = ref(false);
+watch(
+  [design, previewFamily, editFamily, previewState],
+  async () => {
+    await nextTick();
+    const el = canvas.value;
+    overflowed.value = !!el && el.scrollHeight > el.clientHeight + 1;
+  },
+  { deep: true, flush: "post" },
+);
+
 const dirty = computed(
   () => JSON.stringify(design.value) !== saved.value || codeDirty.value,
 );
@@ -503,11 +570,32 @@ async function importCode() {
       tr("JSON语法有误：", "Invalid JSON: ") + (e as Error).message,
     );
   }
+  if (
+    parsed.schema_version === 1 &&
+    Object.keys(design.value.layouts || {}).length
+  ) {
+    if (
+      !window.confirm(
+        tr(
+          "单布局JSON只替换当前编辑布局；名称、主题及其他尺寸保持。是否导入？",
+          "Import this single layout into the current editing scope? Name, theme and other sizes are kept.",
+        ),
+      )
+    )
+      return;
+    const merged = JSON.parse(JSON.stringify(design.value));
+    if (editFamily.value === "default") merged.layout = parsed.layout;
+    else merged.layouts[editFamily.value] = parsed.layout;
+    parsed = merged;
+  }
   design.value = await api("cards/validate", "POST", { design: parsed });
+  editFamily.value = design.value.layouts?.[previewFamily.value]
+    ? previewFamily.value
+    : "default";
   selectedID.value =
-    allNodes(design.value.layout).find((n) =>
+    allNodes(editingLayout.value).find((n) =>
       ["text", "number", "badge", "chart"].includes(n.type),
-    )?.id || design.value.layout.id;
+    )?.id || editingLayout.value.id;
   codeDirty.value = false;
   code.value = currentCode();
 }
@@ -553,10 +641,13 @@ function loadCard(card: Row) {
   draftRevision.value = card.draft_revision;
   publishedRevision.value = card.revision;
   design.value = JSON.parse(JSON.stringify(card.draft));
+  editFamily.value = design.value.layouts?.[previewFamily.value]
+    ? previewFamily.value
+    : "default";
   selectedID.value =
-    allNodes(design.value.layout).find((n) =>
+    allNodes(editingLayout.value).find((n) =>
       ["text", "number", "badge", "chart"].includes(n.type),
-    )?.id || design.value.layout.id;
+    )?.id || editingLayout.value.id;
   editorData.value = JSON.stringify(dataExample(source.value?.state), null, 2);
   integrationOpen.value = !source.value?.state;
   code.value = currentCode();
@@ -656,11 +747,11 @@ function add(kind: string) {
   if (selected && ["row", "column", "grid"].includes(selected.type))
     selected.children!.push(created);
   else {
-    const parent = parentOf(design.value.layout, selectedID.value);
+    const parent = parentOf(editingLayout.value, selectedID.value);
     if (parent) parent.children!.push(created);
     else {
-      const old = design.value.layout;
-      design.value.layout = {
+      const old = editingLayout.value;
+      editingLayout.value = {
         id: "root_" + randomID().slice(0, 8),
         type: "column",
         children: [old, created],
@@ -670,7 +761,7 @@ function add(kind: string) {
   selectedID.value = created.id;
 }
 function removeNode() {
-  const parent = parentOf(design.value.layout, selectedID.value);
+  const parent = parentOf(editingLayout.value, selectedID.value);
   if (!parent) return;
   if (parent.children!.length <= 1) {
     error.value = tr(
@@ -683,7 +774,7 @@ function removeNode() {
   selectedID.value = parent.id;
 }
 function move(id: string, step: number) {
-  const p = parentOf(design.value.layout, id);
+  const p = parentOf(editingLayout.value, id);
   if (!p?.children) return;
   const from = p.children.findIndex((n) => n.id === id),
     to = from + step;
@@ -691,8 +782,8 @@ function move(id: string, step: number) {
   [p.children[from], p.children[to]] = [p.children[to]!, p.children[from]!];
 }
 function drop(from: string, to: string) {
-  const p = parentOf(design.value.layout, from);
-  if (!p?.children || p !== parentOf(design.value.layout, to)) return;
+  const p = parentOf(editingLayout.value, from);
+  if (!p?.children || p !== parentOf(editingLayout.value, to)) return;
   const a = p.children.findIndex((n) => n.id === from),
     b = p.children.findIndex((n) => n.id === to);
   const [item] = p.children.splice(a, 1);
@@ -1792,10 +1883,7 @@ onUnmounted(() => {
               >
                 <strong>{{ tr("AI辅助生成", "AI-Assisted Generation") }}</strong
                 ><span>{{
-                  tr(
-                    "我知道这个接口是做什么的",
-                    "I know what this API is for",
-                  )
+                  tr("我知道这个接口是做什么的", "I know what this API is for")
                 }}</span
                 ><small>{{
                   tr(
@@ -1940,7 +2028,8 @@ onUnmounted(() => {
                       'Example: this is my asset summary. Read the total, show it as a large number, in USD.',
                     )
                   "
-              /></label>
+                />
+              </label>
               <button
                 type="button"
                 class="secondary"
@@ -1959,8 +2048,8 @@ onUnmounted(() => {
               </p>
               <label v-if="aiPromptText"
                 >{{ tr("交给模型的说明", "Instructions for the Model")
-                }}<textarea readonly rows="6" :value="aiPromptText"
-              /></label>
+                }}<textarea readonly rows="6" :value="aiPromptText" />
+              </label>
               <label
                 >{{ tr("模型返回的代码", "Code Returned by the Model")
                 }}<textarea
@@ -1973,7 +2062,8 @@ onUnmounted(() => {
                       'Paste the JSON returned by the model.',
                     )
                   "
-              /></label>
+                />
+              </label>
               <button class="primary" :disabled="busy || !aiResult.trim()">
                 {{ busy ? tr("正在保存…", "Saving…") : tr("保存", "Save") }}
               </button>
@@ -2429,7 +2519,7 @@ onUnmounted(() => {
                 >
                 <CardTree
                   v-if="advancedLayout"
-                  :node="design.layout"
+                  :node="editingLayout"
                   :selected="selectedID"
                   root
                   @select="selectedID = $event"
@@ -2666,7 +2756,7 @@ onUnmounted(() => {
                   class="danger-link"
                   v-if="advancedLayout"
                   @click="removeNode"
-                  :disabled="node.id === design.layout.id"
+                  :disabled="node.id === editingLayout.id"
                 >
                   {{ tr("删除组件", "Delete Component") }}
                 </button>
@@ -2706,6 +2796,50 @@ onUnmounted(() => {
                   )
                 }}
               </p>
+              <p class="banner">
+                {{ tr("正在编辑：", "Editing: ")
+                }}{{
+                  editFamily === "default"
+                    ? tr(
+                        "默认布局（供未单独设计的尺寸使用）",
+                        "Default layout (used by sizes without an override)",
+                      )
+                    : familyTitle(editFamily)
+                }}
+                ·
+                {{
+                  tr(
+                    "一张卡、同一份数据、一次发布。",
+                    "One card, one data source, one publication.",
+                  )
+                }}
+              </p>
+              <div class="actions">
+                <button
+                  class="secondary"
+                  @click="
+                    editFamily = 'default';
+                    selectedID = design.layout.id;
+                  "
+                >
+                  {{ tr("编辑默认布局", "Edit default") }}
+                </button>
+                <button class="secondary" @click="copyLayoutToSize">
+                  {{
+                    tr(
+                      "复制当前布局到预览尺寸",
+                      "Copy current layout to preview size",
+                    )
+                  }}
+                </button>
+                <button
+                  class="secondary"
+                  :disabled="!design.layouts?.[previewFamily]"
+                  @click="restoreDefaultLayout"
+                >
+                  {{ tr("此尺寸恢复默认", "Use default for this size") }}
+                </button>
+              </div>
               <div class="form-grid">
                 <label
                   >{{ tr("尺寸", "Size")
@@ -2730,6 +2864,7 @@ onUnmounted(() => {
               </div>
               <div class="preview-stage">
                 <div
+                  ref="canvas"
                   class="widget-canvas"
                   :class="[
                     previewFamily,
@@ -2737,7 +2872,7 @@ onUnmounted(() => {
                   ]"
                 >
                   <CardPreview
-                    :node="design.layout"
+                    :node="editingLayout"
                     :state="previewState"
                     :rows="
                       previewFamily === 'small'
@@ -2762,6 +2897,14 @@ onUnmounted(() => {
                   }}</small>
                 </div>
               </div>
+              <p v-if="overflowed" class="banner error">
+                {{
+                  tr(
+                    "内容超过当前固定画布，请减少组件或调整字号；真机仍需验证。",
+                    "Content overflows this fixed canvas. Reduce content or font sizes; validate on a real device.",
+                  )
+                }}
+              </p>
               <p class="muted">
                 {{
                   tr(
@@ -2869,7 +3012,10 @@ onUnmounted(() => {
   border-radius: 22px;
   padding: 16px;
   width: min(100%, 350px);
+  height: 170px;
   min-height: 170px;
+  overflow: hidden;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow);
@@ -2877,13 +3023,18 @@ onUnmounted(() => {
 }
 .widget-canvas.small {
   width: 170px;
+  height: 170px;
   min-height: 170px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 .widget-canvas.large {
+  height: 350px;
   min-height: 350px;
 }
 .widget-canvas.extraLarge {
   width: min(100%, 680px);
+  height: 350px;
   min-height: 350px;
 }
 .widget-canvas.dark {

@@ -41,8 +41,12 @@ def main():
     # must remain traversable/readable by the unprivileged service account.
     for path in [stage/'web', *sorted((stage/'web').rglob('*'))]:
         path.chmod(0o755 if path.is_dir() else 0o644)
-    for source in ['install.py','manage.py','install.sh']:
+    for source in ['install.py','manage.py','install.sh','update-agent.py','install-update-agent.py']:
         shutil.copyfile(repository/'deploy'/source,stage/source);(stage/source).chmod(0o755)
+    updates = not args.candidate
+    if updates:
+        for source in ['release-signing.pub','update-settings.json']:
+            shutil.copyfile(repository/'deploy'/source,stage/source);(stage/source).chmod(0o644)
     if identity:
         (stage/'private').mkdir(mode=0o700)
         (stage/'private/apns.json').write_text(json.dumps({k:identity[k] for k in ['key_id','team_id','topic','private_key']}))
@@ -52,7 +56,7 @@ def main():
     readme=repository/'deploy/PUBLIC-INSTALL.md'
     if readme.is_file():shutil.copyfile(readme,stage/'README.md')
     files={str(path.relative_to(stage)):hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(stage.rglob('*')) if path.is_file()}
-    (stage/'bundle.json').write_text(json.dumps({'version':args.version,'platform':'linux','arch':args.arch,'candidate':args.candidate,'official_push_identity':identity is not None,'files':files},indent=2)+'\n')
+    (stage/'bundle.json').write_text(json.dumps({'version':args.version,'platform':'linux','arch':args.arch,'candidate':args.candidate,'official_push_identity':identity is not None,'web_updates':updates,'files':files},indent=2)+'\n')
     archive=args.out/(name+'.tar.gz')
     with tarfile.open(archive,'w:gz') as tar:
         for path in sorted(stage.rglob('*')):

@@ -128,7 +128,8 @@ func (a *App) publishCard(w http.ResponseWriter, r *http.Request) error {
 	var raw []byte
 	var draft, revision int64
 	var hasData bool
-	e = tx.QueryRow(ctx, `SELECT t.draft,t.draft_revision,t.revision,s.state IS NOT NULL FROM card_templates t JOIN card_sources c ON c.id=t.source_id JOIN streams s ON s.id=c.stream_id WHERE t.id=$1 AND t.user_id=$2 FOR UPDATE OF t`, r.PathValue("id"), p.User).Scan(&raw, &draft, &revision, &hasData)
+	var currentState []byte
+	e = tx.QueryRow(ctx, `SELECT t.draft,t.draft_revision,t.revision,s.state IS NOT NULL,s.state FROM card_templates t JOIN card_sources c ON c.id=t.source_id JOIN streams s ON s.id=c.stream_id WHERE t.id=$1 AND t.user_id=$2 FOR UPDATE OF t`, r.PathValue("id"), p.User).Scan(&raw, &draft, &revision, &hasData, &currentState)
 	if e == pgx.ErrNoRows {
 		return notfound()
 	}
@@ -141,8 +142,14 @@ func (a *App) publishCard(w http.ResponseWriter, r *http.Request) error {
 	if !hasData {
 		return bad("no_source_data", "请先发送或采集一份有效数据，再发布卡片。")
 	}
-	if _, e = validateDesign(raw); e != nil {
+	design, e := validateDesign(raw)
+	if e != nil {
 		return e
+	}
+	if design.Version == 2 {
+		if e = validateDesignBindings(design, currentState); e != nil {
+			return e
+		}
 	}
 	revision++
 	if _, e = tx.Exec(ctx, "UPDATE card_templates SET published=draft,revision=$2,updated_at=now() WHERE id=$1", r.PathValue("id"), revision); e != nil {
@@ -329,7 +336,16 @@ func (a *App) subscribedCard(w http.ResponseWriter, r *http.Request) error {
 		return notfound()
 	}
 	row := rows[0]
-	data := map[string]any{"card_id": row["card_id"], "revision": row["revision"], "design": row["design"], "snapshot": map[string]any{"stream_id": row["stream_id"], "data_id": row["data_id"], "revision": row["data_revision"], "received_at": row["received_at"], "state": row["state"]}}
+	var design CardDesign
+	if e = json.Unmarshal(canonical(row["design"]), &design); e != nil {
+		return e
+	}
+	if r.Header.Get("X-Vao-Card-Schema") != "2" {
+		design.Version = 1
+		design.Layouts = nil
+	}
+	w.Header().Set("Vary", "X-Vao-Card-Schema")
+	data := map[string]any{"card_id": row["card_id"], "revision": row["revision"], "design": design, "snapshot": map[string]any{"stream_id": row["stream_id"], "data_id": row["data_id"], "revision": row["data_revision"], "received_at": row["received_at"], "state": row["state"]}}
 	ok(w, data)
 	return nil
 }

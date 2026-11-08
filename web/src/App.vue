@@ -3,6 +3,8 @@ import { randomID } from "./random";
 import { copyText } from "./clipboard";
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import CardStudio from "./CardStudio.vue";
+import NamedRoutes from "./NamedRoutes.vue";
+import SystemUpdates from "./SystemUpdates.vue";
 import {
   locale,
   themeMode,
@@ -73,6 +75,7 @@ const message = ref({
   level: "active",
   sound: "default",
   url: "",
+  icon: "",
 });
 const defaultRoute = ref<Row>({
   configured: false,
@@ -295,6 +298,7 @@ async function send() {
       body: message.value.body,
       notification: { level: message.value.level, sound: message.value.sound },
       ...(message.value.url ? { url: message.value.url } : {}),
+      ...(message.value.icon ? { icon: message.value.icon } : {}),
     };
     const text = JSON.stringify(body);
     if (pendingMessage?.body !== text)
@@ -903,6 +907,33 @@ onUnmounted(() => {
       /></KeepAlive>
 
       <template v-if="page === 'send'">
+        <NamedRoutes
+          :csrf="csrf"
+          :devices="devices"
+          selection-only
+          @select="(ids) => (message.targets = [...ids])"
+        />
+        <section class="panel">
+          <label
+            >{{
+              tr(
+                "消息图标（可选 HTTPS 图片地址）",
+                "Message icon (optional HTTPS image URL)",
+              )
+            }}<input
+              v-model="message.icon"
+              type="url"
+              placeholder="https://example.com/icon.png"
+          /></label>
+          <p class="muted">
+            {{
+              tr(
+                "新版App显示对应图标；旧版App继续显示文字通知。",
+                "New apps display the icon; older apps keep the text notification.",
+              )
+            }}
+          </p>
+        </section>
         <div class="two-column">
           <section class="panel">
             <h2>{{ tr("发一条消息", "Send a Message") }}</h2>
@@ -1455,6 +1486,8 @@ onUnmounted(() => {
       </template>
 
       <template v-if="page === 'settings'">
+        <SystemUpdates :csrf="csrf" />
+        <NamedRoutes :csrf="csrf" :devices="devices" />
         <div class="two-column">
           <section class="panel">
             <h2>{{ tr("管理密码", "Administrator Password") }}</h2>

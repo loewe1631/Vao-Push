@@ -102,5 +102,21 @@ class PackagedIdentityUpgrade(unittest.TestCase):
             self.assertEqual(json.loads((root / "run/installation.json").read_text())["version"], "new")
 
 
+    def test_failed_start_restores_previous_and_rechecks_health(self):
+        with tempfile.TemporaryDirectory() as directory:
+            parent=Path(directory);root=parent/'root';(root/'run').mkdir(parents=True);(root/'releases/old/bin').mkdir(parents=True)
+            (root/'releases/old/bin/vao-push').write_bytes(b'old');(root/'current').symlink_to(root/'releases/old')
+            (root/'run/config.json').write_text(json.dumps({'listen':'127.0.0.1:8188'}));(root/'run/installation.json').write_text(json.dumps({'service_name':'test','version':'old'}))
+            bundle=self._bundle(parent);checks=[]
+            old_run,old_backup,old_healthy=manage.run,manage.backup,manage.healthy
+            try:
+                manage.run=lambda *a,**k:None;manage.backup=lambda *a,**k:None
+                def healthy(root):checks.append((root/'current').resolve().name);return checks[-1]=='old'
+                manage.healthy=healthy
+                with self.assertRaises(RuntimeError):manage.upgrade(root,bundle)
+            finally:manage.run,manage.backup,manage.healthy=old_run,old_backup,old_healthy
+            self.assertEqual(checks,['new','old']);self.assertEqual((root/'current').resolve().name,'old');self.assertEqual(json.loads((root/'run/installation.json').read_text())['version'],'old')
+
+
 if __name__ == "__main__":
     unittest.main()

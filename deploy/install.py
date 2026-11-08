@@ -212,6 +212,13 @@ def install_services(root, config, metadata):
                 except Exception:pass
                 time.sleep(2)
             if not secured:fail('HTTPS尚未就绪。配置已保留，请检查域名解析、证书及端口后用--resume重试。','HTTPS is not ready. Configuration was kept; check DNS, certificates, and ports, then retry using --resume.')
+    if json.loads((root/'current/bundle.json').read_text()).get('web_updates'):
+        import importlib.util
+        path=root/'current/install-update-agent.py'
+        spec=importlib.util.spec_from_file_location('vao_fresh_update_setup',path)
+        setup=importlib.util.module_from_spec(spec);spec.loader.exec_module(setup)
+        setup.configure(root,(root/'current').resolve(),activate=True)
+        run(['systemctl','restart',unit+'.service'])
     print(tr('服务已启动。','Services started.'))
 
 def main():
@@ -221,6 +228,7 @@ def main():
     parser.add_argument('--service-name',default='vao-push')
     parser.add_argument('--answers',type=Path)
     parser.add_argument('--non-interactive',action='store_true')
+    parser.add_argument('--upgrade',action='store_true',help='Upgrade an existing installation in place, keeping its data and identity')
     parser.add_argument('--resume',action='store_true',help='Resume an installation using its saved configuration')
     parser.add_argument('--prepare-only',action='store_true',help='Generate an installation without changing system services')
     ARGS=parser.parse_args()
@@ -233,6 +241,17 @@ def main():
     root=Path(ARGS.prefix).expanduser().absolute()
     if re.search(r'[\s%\n]',str(root)):fail('安装路径不能包含空格或百分号。','The installation path cannot contain whitespace or percent signs.')
     if (root/'run/config.json').exists():
+        if ARGS.upgrade:
+            if os.geteuid()!=0 and not ARGS.prepare_only:fail('请使用sudo升级。','Run the upgrade as root.')
+            bundle=Path(__file__).resolve().parent
+            manifest=verify_bundle(bundle)
+            import importlib.util
+            spec=importlib.util.spec_from_file_location('vao_bundle_manager',bundle/'manage.py')
+            manager=importlib.util.module_from_spec(spec);spec.loader.exec_module(manager)
+            if ARGS.prepare_only:
+                print(tr('升级包已校验；未更改现有服务。','Upgrade bundle validated; the existing service was not changed.'));return
+            manager.upgrade(root,bundle)
+            print(tr('原地升级完成，配置、数据和绑定已保留。','In-place upgrade complete; configuration, data and bindings were kept.'));return
         if not ARGS.resume:fail('此目录已有配置，已停止以保留原数据。可用--resume继续安装，或用manage.py升级。','Configuration already exists. Use --resume to continue installation or manage.py to upgrade.')
         if os.geteuid()!=0 and not ARGS.prepare_only:fail('请使用sudo运行安装。','Run the installer using sudo.')
         metadata=json.loads((root/'run/installation.json').read_text())
@@ -244,6 +263,7 @@ def main():
         print_installation_summary(root,config,manifest)
         return
     if not ARGS.prepare_only and os.geteuid()!=0:fail('请使用sudo运行安装。','Run the installer using sudo.')
+    if ARGS.upgrade:fail('未发现现有安装；首次安装请移除--upgrade。','No existing installation found; omit --upgrade for a fresh installation.')
     bundle=Path(__file__).resolve().parent
     manifest=verify_bundle(bundle)
     ensure_installation_layout(root)

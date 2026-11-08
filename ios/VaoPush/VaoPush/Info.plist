@@ -18,5 +18,9 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Vao Push connects to the self-hosted servers you add to sync messages and cards.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INSendMessageIntent</string>
+	</array>
 </dict>
 </plist>

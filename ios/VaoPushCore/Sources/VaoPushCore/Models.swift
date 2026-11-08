@@ -186,12 +186,14 @@ public struct CardConfiguration: Codable, Equatable, Identifiable, Sendable {
 public enum CardDisplayMode: String, Codable, Sendable { case summary, chart }
 
 public struct ArchivedMessage: Codable, Equatable, Identifiable, Sendable {
+    public var icon: String? = nil
     public var id: String
     public var title: String
     public var body: String
     public var receivedAt: String
 
-    public init(id: String, title: String, body: String, receivedAt: String) {
+    public init(id: String, title: String, body: String, receivedAt: String, icon: String? = nil) {
+        self.icon = icon
         self.id = id; self.title = title; self.body = body; self.receivedAt = receivedAt
     }
 }

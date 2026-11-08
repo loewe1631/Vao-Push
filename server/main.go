@@ -28,6 +28,7 @@ import (
 var schema string
 
 type Config struct {
+	UpdateSocket     string `json:"update_socket,omitempty"`
 	Listen           string `json:"listen"`
 	WebListen        string `json:"web_listen,omitempty"`
 	WebURL           string `json:"web_url,omitempty"`
@@ -119,6 +120,9 @@ func (a *App) route(pattern string, f endpoint) {
 }
 func (a *App) routes() {
 	a.mux = http.NewServeMux()
+	a.route("GET /v1/system/update", a.systemUpdate)
+	a.route("POST /v1/system/update/check", a.systemUpdate)
+	a.route("POST /v1/system/update/install", a.systemUpdate)
 	a.route("GET /v1/info", a.info)
 	a.route("GET /healthz", a.health)
 	a.route("POST /v1/auth/login", a.login)
@@ -165,6 +169,10 @@ func (a *App) routes() {
 	a.route("GET /v1/card-subscriptions/{id}", a.subscribedCard)
 	a.route("DELETE /v1/card-subscriptions/{id}", a.unsubscribeCard)
 
+	a.route("GET /v1/message-routes", a.namedRoutes)
+	a.route("POST /v1/message-routes", a.saveNamedRoute)
+	a.route("PUT /v1/message-routes/{id}", a.saveNamedRoute)
+	a.route("DELETE /v1/message-routes/{id}", a.deleteNamedRoute)
 	a.route("GET /v1/message-route", a.messageRoute)
 	a.route("PUT /v1/message-route", a.saveMessageRoute)
 	a.route("PUT /v1/widgets/{data_id}/state", a.state)
@@ -205,7 +213,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.mux.ServeHTTP(w, r)
 }
 func (a *App) info(w http.ResponseWriter, r *http.Request) error {
-	ok(w, map[string]any{"protocol_version": 1, "server_id": a.cfg.ID, "name": a.cfg.Name, "registration": "automatic"})
+	ok(w, map[string]any{"protocol_version": 1, "server_version": ServerVersion, "capabilities": []string{"card-layouts-v2", "message-routes", "message-icons", "web-updates"}, "server_id": a.cfg.ID, "name": a.cfg.Name, "registration": "automatic"})
 	return nil
 }
 func (a *App) health(w http.ResponseWriter, r *http.Request) error {
@@ -214,7 +222,7 @@ func (a *App) health(w http.ResponseWriter, r *http.Request) error {
 	if e := a.db.Ping(ctx); e != nil {
 		return e
 	}
-	ok(w, map[string]string{"status": "ok"})
+	ok(w, map[string]string{"status": "ok", "server_version": ServerVersion})
 	return nil
 }
 func main() {

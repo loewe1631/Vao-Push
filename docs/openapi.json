@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Vao Push API",
-    "version": "0.1.0",
+    "version": "1.1.0",
     "description": "简单自动接入与两路发送。手机添加地址自动注册，发送 Key 固定一台设备；App 控制与 Widget 只读凭据分离。Web 为服务器管理员控制台。旧配对、分组与范围凭据 API 为兼容保留。字节与跨字段规则仍由服务端校验。"
   },
   "servers": [
@@ -3416,6 +3416,17 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "X-Vao-Card-Schema",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "enum": [
+                "2"
+              ]
+            },
+            "description": "仅支持多布局的读者发送；省略时返回v1默认布局。"
           }
         ]
       },
@@ -3567,6 +3578,302 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/message-routes": {
+      "get": {
+        "summary": "管理命名推送列表",
+        "security": [
+          {
+            "webSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作结果；具体字段见 server-1.1.md"
+          },
+          "default": {
+            "description": "错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "管理命名推送列表",
+        "security": [
+          {
+            "webSession": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作结果；具体字段见 server-1.1.md"
+          },
+          "default": {
+            "description": "错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "device_ids"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "device_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 250
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/message-routes/{id}": {
+      "put": {
+        "summary": "管理命名推送列表",
+        "security": [
+          {
+            "webSession": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作结果；具体字段见 server-1.1.md"
+          },
+          "default": {
+            "description": "错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "route revision: \"route-{revision}\""
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "device_ids"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "device_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 250
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "管理命名推送列表",
+        "security": [
+          {
+            "webSession": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作结果；具体字段见 server-1.1.md"
+          },
+          "default": {
+            "description": "错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "route revision: \"route-{revision}\""
+          }
+        ]
+      }
+    },
+    "/v1/system/update": {
+      "get": {
+        "summary": "检查或执行当前实例升级",
+        "security": [
+          {
+            "webSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作结果；具体字段见 server-1.1.md"
+          },
+          "default": {
+            "description": "错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/system/update/check": {
+      "post": {
+        "summary": "检查或执行当前实例升级",
+        "security": [
+          {
+            "webSession": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作结果；具体字段见 server-1.1.md"
+          },
+          "default": {
+            "description": "错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/system/update/install": {
+      "post": {
+        "summary": "检查或执行当前实例升级",
+        "security": [
+          {
+            "webSession": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作结果；具体字段见 server-1.1.md"
+          },
+          "default": {
+            "description": "错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "release_id",
+                  "confirm"
+                ],
+                "properties": {
+                  "release_id": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "confirm": {
+                    "const": true
+                  }
                 }
               }
             }
@@ -3866,6 +4173,12 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 86400
+          },
+          "icon": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 1024,
+            "description": "可选HTTPS图片地址；旧客户端继续显示文字通知。"
           }
         },
         "required": [
@@ -4022,6 +4335,12 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 86400
+          },
+          "icon": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 1024,
+            "description": "可选HTTPS图片地址；旧客户端继续显示文字通知。"
           }
         },
         "required": [
@@ -4412,44 +4731,14 @@
         ]
       },
       "CardDesign": {
-        "title": "Vao Push Card Design v1",
-        "description": "运行时另校验最多24KiB、6层、64节点、全局唯一节点id及UTF-8字节长度。",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "schema_version",
-          "name",
-          "family",
-          "layout"
-        ],
-        "properties": {
-          "schema_version": {
-            "const": 1
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/CardDesignV1"
           },
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 120
-          },
-          "family": {
-            "enum": [
-              "small",
-              "medium",
-              "large",
-              "extraLarge"
-            ]
-          },
-          "theme": {
-            "enum": [
-              "system",
-              "light",
-              "dark"
-            ]
-          },
-          "layout": {
-            "$ref": "#/components/schemas/CardNode"
+          {
+            "$ref": "#/components/schemas/CardDesignV2"
           }
-        }
+        ]
       },
       "SourceFieldMapping": {
         "type": "object",
@@ -4700,6 +4989,105 @@
           }
         },
         "additionalProperties": false
+      },
+      "CardDesignV1": {
+        "title": "Vao Push Card Design v1",
+        "description": "运行时另校验最多24KiB、6层、64节点、全局唯一节点id及UTF-8字节长度。",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "name",
+          "family",
+          "layout"
+        ],
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "family": {
+            "enum": [
+              "small",
+              "medium",
+              "large",
+              "extraLarge"
+            ]
+          },
+          "theme": {
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ]
+          },
+          "layout": {
+            "$ref": "#/components/schemas/CardNode"
+          }
+        }
+      },
+      "CardDesignV2": {
+        "title": "Card design v2",
+        "description": "运行时另校验最多24KiB、6层、64节点、全局唯一节点id及UTF-8字节长度。",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "name",
+          "family",
+          "layout"
+        ],
+        "properties": {
+          "schema_version": {
+            "const": 2
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "family": {
+            "enum": [
+              "small",
+              "medium",
+              "large",
+              "extraLarge"
+            ]
+          },
+          "theme": {
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ]
+          },
+          "layout": {
+            "$ref": "#/components/schemas/CardNode"
+          },
+          "layouts": {
+            "type": "object",
+            "additionalProperties": false,
+            "maxProperties": 4,
+            "properties": {
+              "small": {
+                "$ref": "#/components/schemas/CardNode"
+              },
+              "medium": {
+                "$ref": "#/components/schemas/CardNode"
+              },
+              "large": {
+                "$ref": "#/components/schemas/CardNode"
+              },
+              "extraLarge": {
+                "$ref": "#/components/schemas/CardNode"
+              }
+            }
+          }
+        }
       }
     },
     "securitySchemes": {

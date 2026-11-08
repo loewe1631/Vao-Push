@@ -401,3 +401,7 @@ Web 不需要收集“来自 Bot 还是脚本”，也不要求用户粘贴发�
 OpenAPI/JSON Schema、真实响应和手机解析器应共享同一版本定义；未知 schema_version 拒绝，不悄悄按旧版本解释。新增可选字段允许向前兼容，字段 key 语义变化按破坏性变更处理。
 
 首要验收：两路独立、手动发送无需代码、重复和乱序不误覆盖、零与空值区分、字段别名保留、同数据多卡、跨用户隔离、断网后仍可读最近内容。实现边界见[实现概览](implementation.md)。
+
+## 服务端1.1.0扩展
+
+消息可提供可选`icon` HTTPS图片地址，保留原version=1/kind=message/文字字段。`GET/POST /v1/message-routes`、`PUT/DELETE /v1/message-routes/{id}`管理命名列表；修改/删除带`If-Match: "route-{revision}"`，原单默认列表端点和发送地址保留。管理员的`GET /v1/system/update`、`POST /v1/system/update/check`和`POST /v1/system/update/install`提供系统升级，写请求继续验证会话、Origin和CSRF。详见[1.1.0说明](server-1.1.md)及[OpenAPI](openapi.json)。

@@ -32,3 +32,7 @@ python3 deploy/package-release.py \
 ```
 
 正式包需要主许可证、第三方许可文本和生产 APNs 身份文件。发布工具不会上传 GitHub、Cloudflare、镜像仓库或 App Store。
+
+## Web系统更新
+
+官方1.1.0及以后标准安装/原地升级自动配置签名更新源、公钥和独立执行器。旧安装使用`install.sh --upgrade --prefix <安装目录>`补齐，无需重装或重置数据。执行器不会在自己的升级任务中被重启，CLI与Web共用实例升级锁。详见PUBLIC-INSTALL.md。

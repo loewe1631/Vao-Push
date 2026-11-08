@@ -101,3 +101,7 @@ Web 可提供“复制AI生成说明”：包括卡片描述版本、可用组�
 当前接口、描述限额和微调项见工作台说明。真实APNs、Widget后台刷新和交互仍需真机；任何导入码或Web编辑能力都不改变iOS的刷新调度限制。
 
 平台依据：[WidgetKit支持的视图](https://developer.apple.com/documentation/widgetkit/swiftui-views)、[WidgetKit推送更新](https://developer.apple.com/documentation/widgetkit/updating-widgets-with-widgetkit-push-notifications)。
+
+## 1.1.0：按尺寸编辑
+
+默认布局始终保留；在尺寸预览中明确复制当前布局，才创建该尺寸覆盖。覆盖独立保存，可恢复使用默认。单布局JSON导入多布局卡片前会提示作用范围，其他尺寸不被悄悄覆盖。固定画布会提示溢出；原生字体与系统边距仍须在实际设备核对。旧客户端继续使用默认布局。

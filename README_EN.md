@@ -2,69 +2,61 @@
 
 [中文](README.md)
 
-Vao Push is a free, open-source, self-hosted message delivery and Home Screen data card system. Deploy the server on your own machine, connect to it from the iOS / iPadOS app, and send messages or structured data through HTTP, scripts, business systems, or the Web console.
+Vao Push is a free, open-source, self-hosted notification and Home Screen data card system. Connect the iOS / iPadOS app to your own server, then send messages or structured data through HTTP, scripts, business systems, or the Web console.
 
-## Features
+## Server 1.1.0
 
-- **Notifications**: Store message history, deliver notifications to registered devices, and open the target message details when a notification is tapped.
-- **Home Screen data cards**: Keep data sources, latest state, and card layouts separate so one data source can power multiple cards.
-- **Web workbench**: Create data sources, configure fields, design cards visually, import JSON drafts, publish cards, and manage subscriptions.
-- **AI-assisted design**: Copy a key-free generation prompt to a model of your choice, then import the returned JSON draft into the workbench.
-- **Self-hosted deployment**: The installer supports Chinese and English, separate API/Web ports, direct HTTP by IP, domain HTTPS, reverse proxies, and operator-provided certificates.
+- Named push lists with independent URLs, editable recipients, renaming and deletion. Existing default sending URLs keep working.
+- Multiple widget-size layouts for one card and data source, with explicit editing, fixed previews and overflow warnings. Older apps keep using the default layout.
+- Optional HTTPS message icons in API requests and the Web sender. Supporting clients display the avatar; older clients retain readable text notifications.
+- Signed Web updates through an instance-bound local executor. Standard installation and in-place upgrades configure it automatically.
+- Compatibility with the existing features of app 1.0.0. Upgrades retain account settings, devices, credentials, sending URLs, history and card subscriptions.
 
-## Release status
+This release updates the server and Web UI. It does not announce a simultaneous iOS app release. Native size-specific layouts and notification avatars require a supporting client; iOS app updates continue through the App Store.
 
-Server 1.0.0 provides public release packages for Linux amd64 and arm64, with production APNs configured automatically during installation. The iOS / iPadOS client 1.0.0 has been submitted to App Store Review; documentation and support are available at [push.vaovao.app](https://push.vaovao.app). No Apple private key or user deployment credential is included in source control. Widget refresh timing depends on system scheduling and push conditions; Vao Push does not promise a fixed once-per-minute refresh rate.
+[Download Server 1.1.0](https://github.com/loewe1631/Vao-Push/releases/tag/v1.1.0) · [Installation and upgrades](deploy/PUBLIC-INSTALL.md) · [Website](https://push.vaovao.app/en/)
 
-[Download Server 1.0.0](https://github.com/loewe1631/Vao-Push/releases/tag/v1.0.0) · [Installation guide](deploy/PUBLIC-INSTALL.md) · [Website & Support](https://push.vaovao.app/en/)
+## New installation
 
-## Quick links
+```sh
+curl -fsSL https://github.com/loewe1631/Vao-Push/releases/download/v1.1.0/install.sh -o vao-push-install.sh
+sudo bash vao-push-install.sh
+```
 
-- [Simple onboarding](docs/simple-onboarding.md)
-- [API protocol](docs/api-v1.md)
-- [Card workbench](docs/card-studio-api.md)
-- [Web card guide](docs/web-studio-guide.md)
-- [Server installation](deploy/PUBLIC-INSTALL.md)
-- [Privacy and data flow](docs/privacy-data-flow.md)
-- [Third-party dependencies and notices](THIRD_PARTY.md)
+## Existing installation
 
-## Repository layout
+**Do not reinstall or reset your data.** Run one in-place upgrade to retain configuration, passwords, devices and data while enabling Web updates:
 
-~~~text
-ios/        iOS app, notification extension, Widget, and shared core
-server/     Go server, PostgreSQL schema, and delivery worker
-web/        Vue 3 / TypeScript Web console
-deploy/     Installation, upgrade, backup, and restore tools
-docs/       API, card, privacy, and deployment documentation
-examples/   Request and card examples without real credentials
-~~~
+```sh
+curl -fsSL https://github.com/loewe1631/Vao-Push/releases/download/v1.1.0/install.sh -o vao-push-install.sh
+sudo bash vao-push-install.sh --upgrade --prefix /opt/vao-push
+```
 
-## Development checks
+Adjust `--prefix` for a custom installation directory. The upgrader backs up first, switches the program and verifies health and the running version. See the [installation guide](deploy/PUBLIC-INSTALL.md) for database recovery limitations. Later updates can be checked and confirmed under Server Settings. Unattended scheduled installation is not enabled by default.
 
-Server:
+## More features
 
-~~~sh
-cd server
-go test -race ./...
-go vet ./...
-~~~
+Message history and notification detail navigation, multiple isolated servers, manual device selection, JSON/API data sources, visual card editing, JSON import, publication and subscription codes. AI-assisted design uses key-free prompts that users pass to their chosen model. Installation supports Chinese/English, separate API/Web ports, HTTP by IP, domain HTTPS, reverse proxies and custom certificates.
 
-Web:
+Source control does not contain Apple private keys or customer deployment credentials. Official prebuilt packages include this product's dedicated production APNs identity. Update manifests use a separate signing key; only its public key is distributed. Widget refreshes depend on system scheduling and push conditions, not a fixed once-per-minute guarantee.
 
-~~~sh
-cd web
-npm ci
-npm test
-npm run build
-~~~
+## Documentation
 
-iOS shared core:
+- [Server 1.1.0 and compatibility](docs/server-1.1.md)
+- [Simple onboarding](docs/simple-onboarding.md), [API](docs/api-v1.md), [OpenAPI](docs/openapi.json)
+- [Card workbench](docs/card-studio-api.md), [Web card guide](docs/web-studio-guide.md)
+- [Privacy](docs/privacy-data-flow.md), [third-party notices](THIRD_PARTY.md)
 
-~~~sh
-cd ios/VaoPushCore
-swift test
-~~~
+## Development
+
+```sh
+cd server && go test -race ./... && go vet ./...
+cd ../web && npm ci && npm test && npm run build
+cd ../ios/VaoPushCore && swift test
+```
+
+Use an isolated PostgreSQL database with `VAO_TEST_CONFIG`. Integration tests create per-test schemas; never point them at production. Optional network tests need explicitly configured isolated fixtures.
 
 ## License
 
-The project source is licensed under the [MIT License](LICENSE). Third-party dependencies and assets retain their own licenses; see [THIRD_PARTY.md](THIRD_PARTY.md) and [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
+The project source is licensed under [MIT](LICENSE). Third-party dependencies and assets retain their own licenses; see [THIRD_PARTY.md](THIRD_PARTY.md) and [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).

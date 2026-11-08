@@ -29,3 +29,9 @@ server/server
 # Python installer bytecode
 __pycache__/
 *.pyc
+
+# Local signing and release outputs
+*.ipa
+*.xcarchive/
+release-artifacts/
+backups/
