@@ -142,6 +142,8 @@ func (a *App) routes() {
 	a.route("POST /v1/groups", a.createGroup)
 	a.route("POST /v1/streams", a.createStream)
 	a.route("POST /v1/messages", a.message)
+	a.route("GET /v1/card-sources/{id}/history", a.sourceHistory)
+	a.route("PUT /v1/card-sources/{id}/history", a.sourceHistory)
 	a.route("GET /v1/card-sources/{id}", a.sourceSettings)
 	a.route("GET /v1/card-sources/{id}/deletion", a.sourceDeletion)
 	a.route("DELETE /v1/card-sources/{id}", a.sourceDeletion)

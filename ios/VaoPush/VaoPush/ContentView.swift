@@ -167,10 +167,7 @@ struct ContentView: View {
                                 PrototypeCardView(card: entry.card, snapshot: snapshot, sourceName: entry.source.name, isDemo: entry.source.isDemo)
                             }
                         }
-                            .foregroundStyle(VaoTheme.text)
-                            .frame(maxWidth: .infinity, minHeight: 225, alignment: .topLeading).padding(20)
-                            .background(VaoTheme.surface, in: RoundedRectangle(cornerRadius: 16))
-                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(VaoTheme.line, lineWidth: 1))
+                            .modifier(CardPreviewSurface(theme: entry.card.theme, minimumHeight: 225, padding: 20))
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }.buttonStyle(.plain)
                 HStack {

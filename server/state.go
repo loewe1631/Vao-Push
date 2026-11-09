@@ -409,6 +409,10 @@ func (a *App) state(w http.ResponseWriter, r *http.Request) error {
 		if rev == 9223372036854775807 {
 			return conflict("revision_exhausted", "请创建新的数据流。")
 		}
+		payload, e = accumulateHistory(ctx, tx, sid, s, payload)
+		if e != nil {
+			return e
+		}
 		rev++
 		now := time.Now().UTC()
 		received = &now

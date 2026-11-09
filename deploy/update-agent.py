@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Local-only, signed-release updater. Install with deploy/install-update-agent.py."""
-import argparse,base64,datetime,fcntl,time,hashlib,http.server,importlib.util,json,os,platform,re,shutil,socketserver,subprocess,tarfile,tempfile,threading,urllib.parse,urllib.request,uuid
+import argparse,base64,datetime,fcntl,time,hashlib,http.server,importlib.util,json,os,platform,re,shutil,socketserver,subprocess,tarfile,tempfile,threading,urllib.parse,urllib.request,urllib.error,uuid
 from pathlib import Path
 
 class UpdateError(Exception):pass
@@ -42,11 +42,25 @@ class Agent:
         local=self.config.get('test_loopback',False) and u.hostname in ('127.0.0.1','localhost') and u.scheme=='http'
         if (u.scheme!='https' and not local) or u.username or u.password or u.fragment or u.hostname not in self.config['allowed_hosts']:raise UpdateError('Unapproved update source')
     def download(self,url,limit,destination=None):
+        # Restart partial downloads and retry only transient transport failures. Signature,
+        # checksum, host restrictions and archive validation remain fail-closed.
+        started=time.monotonic();budget=180 if destination else 14
+        for attempt in range(3):
+            remaining=budget-(time.monotonic()-started)
+            if remaining<=0:raise UpdateError('Update download timed out')
+            try:return self.download_once(url,limit,destination,min(5 if destination is None else 20,remaining),started+budget)
+            except urllib.error.HTTPError as error:
+                if error.code not in (408,429,500,502,503,504) or attempt==2:raise
+            except (urllib.error.URLError,TimeoutError,ConnectionError):
+                if attempt==2:raise
+            if time.monotonic()-started>=budget:raise UpdateError('Update download timed out')
+            time.sleep(0.25*(attempt+1))
+    def download_once(self,url,limit,destination,timeout,deadline):
         self.allowed(url);opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),RestrictedRedirect(self.allowed))
         req=urllib.request.Request(url,headers={'User-Agent':'VaoPush-Updater/1','Accept':'application/json' if destination is None else 'application/octet-stream'})
-        with opener.open(req,timeout=20) as response:
+        with opener.open(req,timeout=timeout) as response:
             if response.status!=200:raise UpdateError('Update source unavailable')
-            total=0;chunks=[];deadline=time.monotonic()+180
+            total=0;chunks=[]
             output=destination.open('wb') if destination else None
             try:
                 while True:

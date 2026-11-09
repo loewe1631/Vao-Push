@@ -97,7 +97,7 @@ struct CardEditor: View {
                 Text(VaoL10n.text("小")).tag(0); Text(VaoL10n.text("中")).tag(1); Text(VaoL10n.text("大")).tag(2); Text(VaoL10n.text("超大 · iPad")).tag(3)
             }.pickerStyle(.segmented)
             PrototypeCardView(card: draft, snapshot: snapshot, mode: mode, compact: previewSize < 2, expanded: previewSize > 1, sourceName: source.name, isDemo: source.isDemo, fieldLimit: [2,4,12,20][previewSize])
-                .frame(minHeight: previewSize == 0 ? 145 : previewSize == 1 ? 165 : 290).padding(.vertical, 8)
+                .modifier(CardPreviewSurface(theme: draft.theme, minimumHeight: previewSize == 0 ? 145 : previewSize == 1 ? 165 : 290, padding: 12))
             if draft.fields.filter(\.visible).count > [2,4,12,20][previewSize] {
                 Text(VaoL10n.text("此尺寸只显示前{0}项；可调整顺序或选择更大尺寸。", String(describing: [2,4,12,20][previewSize]))).font(.caption).foregroundStyle(.secondary)
             }

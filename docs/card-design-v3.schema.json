@@ -1,0 +1,759 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Vao Push Card Design v3",
+  "description": "Client capabilities with explicit stable v2 fallback. Server validates structural and byte limits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "family",
+    "layout",
+    "fallback"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 3
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "family": {
+      "enum": [
+        "small",
+        "medium",
+        "large",
+        "extraLarge"
+      ]
+    },
+    "theme": {
+      "enum": [
+        "system",
+        "light",
+        "dark"
+      ]
+    },
+    "layout": {
+      "$ref": "#/$defs/node"
+    },
+    "layouts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "small": {
+          "$ref": "#/$defs/node"
+        },
+        "medium": {
+          "$ref": "#/$defs/node"
+        },
+        "large": {
+          "$ref": "#/$defs/node"
+        },
+        "extraLarge": {
+          "$ref": "#/$defs/node"
+        }
+      },
+      "maxProperties": 4
+    },
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layout"
+      ],
+      "properties": {
+        "layout": {
+          "$ref": "#/$defs/legacyNode"
+        },
+        "layouts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "small": {
+              "$ref": "#/$defs/legacyNode"
+            },
+            "medium": {
+              "$ref": "#/$defs/legacyNode"
+            },
+            "large": {
+              "$ref": "#/$defs/legacyNode"
+            },
+            "extraLarge": {
+              "$ref": "#/$defs/legacyNode"
+            }
+          },
+          "maxProperties": 4
+        }
+      }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "type": {
+          "enum": [
+            "row",
+            "column",
+            "grid",
+            "list",
+            "text",
+            "number",
+            "badge",
+            "divider",
+            "spacer",
+            "chart",
+            "icon",
+            "sparkline"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "bind": {
+          "type": "string",
+          "pattern": "^(fields|series)\\.[A-Za-z][A-Za-z0-9_]{0,63}$"
+        },
+        "format": {
+          "enum": [
+            "",
+            "decimal",
+            "percent"
+          ]
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "color_rule": {
+          "enum": [
+            "",
+            "signed"
+          ]
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "background": {
+          "$ref": "#/$defs/color"
+        },
+        "font_size": {
+          "anyOf": [
+            {
+              "const": 0
+            },
+            {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 32
+            }
+          ]
+        },
+        "weight": {
+          "enum": [
+            "",
+            "regular",
+            "medium",
+            "semibold",
+            "bold"
+          ]
+        },
+        "alignment": {
+          "enum": [
+            "",
+            "leading",
+            "center",
+            "trailing"
+          ]
+        },
+        "spacing": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "padding": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "radius": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "flex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "source": {
+          "const": "items"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          },
+          "minItems": 1,
+          "maxItems": 12
+        },
+        "row": {
+          "$ref": "#/$defs/node"
+        },
+        "visible_when": {
+          "type": "string",
+          "pattern": "^fields\\.[A-Za-z][A-Za-z0-9_]{0,63}$"
+        },
+        "hide_if_empty": {
+          "type": "boolean"
+        },
+        "colors": {
+          "$ref": "#/$defs/colorPair"
+        },
+        "background_colors": {
+          "$ref": "#/$defs/colorPair"
+        },
+        "states": {
+          "type": "object",
+          "maxProperties": 16,
+          "additionalProperties": {
+            "$ref": "#/$defs/stateStyle"
+          }
+        },
+        "unknown_state": {
+          "$ref": "#/$defs/stateStyle"
+        },
+        "border": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "width"
+          ],
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            },
+            "colors": {
+              "$ref": "#/$defs/colorPair"
+            }
+          }
+        },
+        "prefix": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "suffix": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "symbol": {
+          "type": "string",
+          "pattern": "^(sf:)?[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        },
+        "image_url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://",
+          "maxLength": 1024
+        },
+        "chart_style": {
+          "enum": [
+            "line",
+            "bar"
+          ]
+        },
+        "icon_size": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 48
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 80
+        },
+        "min_points": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 60
+        },
+        "gap_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "row",
+                  "column",
+                  "grid"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "children"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "children"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "grid"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "columns"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "columns"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "list"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "source",
+              "limit",
+              "row"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "source"
+                  ]
+                },
+                {
+                  "required": [
+                    "limit"
+                  ]
+                },
+                {
+                  "required": [
+                    "row"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "chart"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bind"
+            ],
+            "properties": {
+              "bind": {
+                "pattern": "^series\\."
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "bind": {
+                "pattern": "^fields\\."
+              }
+            }
+          }
+        }
+      ]
+    },
+    "legacyNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "type": {
+          "enum": [
+            "row",
+            "column",
+            "grid",
+            "list",
+            "text",
+            "number",
+            "badge",
+            "divider",
+            "spacer",
+            "chart"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "bind": {
+          "type": "string",
+          "pattern": "^(fields|series)\\.[A-Za-z][A-Za-z0-9_]{0,63}$"
+        },
+        "format": {
+          "enum": [
+            "",
+            "decimal",
+            "percent"
+          ]
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "color_rule": {
+          "enum": [
+            "",
+            "signed"
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "enum": [
+                "",
+                "primary",
+                "secondary",
+                "accent"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          ]
+        },
+        "background": {
+          "anyOf": [
+            {
+              "enum": [
+                "",
+                "primary",
+                "secondary",
+                "accent"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          ]
+        },
+        "font_size": {
+          "anyOf": [
+            {
+              "const": 0
+            },
+            {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 32
+            }
+          ]
+        },
+        "weight": {
+          "enum": [
+            "",
+            "regular",
+            "medium",
+            "semibold",
+            "bold"
+          ]
+        },
+        "alignment": {
+          "enum": [
+            "",
+            "leading",
+            "center",
+            "trailing"
+          ]
+        },
+        "spacing": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "padding": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "radius": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "flex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "source": {
+          "const": "items"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/legacyNode"
+          },
+          "minItems": 1,
+          "maxItems": 12
+        },
+        "row": {
+          "$ref": "#/$defs/legacyNode"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "row",
+                  "column",
+                  "grid"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "children"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "children"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "grid"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "columns"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "columns"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "list"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "source",
+              "limit",
+              "row"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "source"
+                  ]
+                },
+                {
+                  "required": [
+                    "limit"
+                  ]
+                },
+                {
+                  "required": [
+                    "row"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "chart"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bind"
+            ],
+            "properties": {
+              "bind": {
+                "pattern": "^series\\."
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "bind": {
+                "pattern": "^fields\\."
+              }
+            }
+          }
+        }
+      ]
+    },
+    "color": {
+      "anyOf": [
+        {
+          "enum": [
+            "primary",
+            "secondary",
+            "accent",
+            "surface"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        }
+      ]
+    },
+    "colorPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "light",
+        "dark"
+      ],
+      "properties": {
+        "light": {
+          "$ref": "#/$defs/color"
+        },
+        "dark": {
+          "$ref": "#/$defs/color"
+        }
+      }
+    },
+    "stateStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "background": {
+          "$ref": "#/$defs/color"
+        },
+        "colors": {
+          "$ref": "#/$defs/colorPair"
+        },
+        "background_colors": {
+          "$ref": "#/$defs/colorPair"
+        }
+      }
+    }
+  }
+}

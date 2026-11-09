@@ -93,6 +93,7 @@ func inspectPublication(design CardDesign, previous *CardDesign, state []byte) p
 		single := design
 		single.Version = 1
 		single.Layouts = nil
+		single.Fallback = nil
 		single.Layout = tree
 		report.Layouts = append(report.Layouts, publicationLayout{family, len(flattenLayout(tree)), len(canonical(single))})
 		var visit func(LayoutNode, map[string]any)
@@ -101,8 +102,8 @@ func inspectPublication(design CardDesign, previous *CardDesign, state []byte) p
 			key := strings.TrimPrefix(n.Bind, "fields.")
 			field, _ := fields[key].(map[string]any)
 			kind, _ := field["type"].(string)
-			if n.Bind != "" && n.Text == "" && n.Type != "chart" {
-				if field == nil || field["value"] == nil {
+			if n.Bind != "" && n.Text == "" && n.Type != "chart" && n.Type != "sparkline" {
+				if (field == nil || field["value"] == nil) && !n.HideIfEmpty && n.VisibleWhen == "" {
 					warn("empty_field", family, n.ID, "字段缺失或为 null，手机将显示“不可用”；不会自动隐藏节点。", "Missing/null fields display Unavailable; they do not hide the node.")
 				}
 				if n.Decimals != nil && kind == "text" && n.Format == "" {
@@ -120,18 +121,18 @@ func inspectPublication(design CardDesign, previous *CardDesign, state []byte) p
 					}
 				}
 			}
-			if n.Type == "badge" && n.Background != "" {
+			if design.Version < 3 && n.Type == "badge" && n.Background != "" {
 				warn("badge_background", family, n.ID, "背景设置作用于 badge 外层，内部胶囊仍使用内置底色；静态色块可使用文字胶囊。", "A badge background styles its outer node; the inner pill keeps the built-in fill. Use a text pill for a static fill.")
 			}
 			if strings.HasPrefix(n.Color, "#") || strings.HasPrefix(n.Background, "#") {
 				warn("fixed_color", family, n.ID, "自定义颜色不会自动切换明暗色值，请分别检查两种外观。", "Custom hex colors keep the same value in light and dark; check both appearances.")
 			}
-			if n.Type == "chart" {
+			if n.Type == "chart" || n.Type == "sparkline" {
 				series, _ := scope["series"].(map[string]any)
 				v, _ := series[strings.TrimPrefix(n.Bind, "series.")].(map[string]any)
 				points, _ := v["points"].([]any)
 				if len(points) < 2 {
-					warn("chart_samples", family, n.ID, "历史序列不足两个点，无法形成可读趋势；不会自动收起图表。", "Fewer than two samples cannot show a readable trend; the chart does not collapse automatically.")
+					warn("chart_samples", family, n.ID, "历史序列不足两个点；旧图表保留占位，1.2迷你趋势自动收起。", "Fewer than two samples: legacy charts keep a placeholder; 1.2 sparklines collapse.")
 				}
 			}
 			for _, child := range n.Children {
@@ -146,6 +147,14 @@ func inspectPublication(design CardDesign, previous *CardDesign, state []byte) p
 			}
 		}
 		visit(tree, data)
+	}
+	if design.Version == 3 {
+		warn("legacy_fallback", "default", "", "App 1.0/1.1 将显示固定的兼容布局，请检查各尺寸内容与节点微调。", "App 1.0/1.1 receives saved legacy layouts. Review every size and local adjustments.")
+		for _, n := range flattenLayout(design.Layout) {
+			if n.Type == "icon" && n.ImageURL != "" {
+				warn("image_dependency", "default", n.ID, "HTTPS图标失败或离线时使用系统图标；图片不携带服务端凭据。", "HTTPS icons fall back to a system symbol on failure or offline. No server credentials are sent.")
+			}
+		}
 	}
 	if previous != nil {
 		for _, family := range families {

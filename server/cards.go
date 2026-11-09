@@ -149,7 +149,7 @@ func (a *App) publishCard(w http.ResponseWriter, r *http.Request) error {
 	if e != nil {
 		return e
 	}
-	if design.Version == 2 {
+	if design.Version >= 2 {
 		if e = validateDesignBindings(design, currentState); e != nil {
 			return e
 		}
@@ -343,10 +343,15 @@ func (a *App) subscribedCard(w http.ResponseWriter, r *http.Request) error {
 	if e = json.Unmarshal(canonical(row["design"]), &design); e != nil {
 		return e
 	}
-	if r.Header.Get("X-Vao-Card-Schema") != "2" {
-		design.Version = 1
-		design.Layouts = nil
+	w.Header().Set("Vary", "X-Vao-Card-Schema")
+	schema := 1
+	if r.Header.Get("X-Vao-Card-Schema") == "2" {
+		schema = 2
 	}
+	if r.Header.Get("X-Vao-Card-Schema") == "3" {
+		schema = 3
+	}
+	design = projectCard(design, schema)
 	w.Header().Set("Vary", "X-Vao-Card-Schema")
 	data := map[string]any{"card_id": row["card_id"], "revision": row["revision"], "design": design, "snapshot": map[string]any{"stream_id": row["stream_id"], "data_id": row["data_id"], "revision": row["data_revision"], "received_at": row["received_at"], "state": row["state"]}}
 	ok(w, data)

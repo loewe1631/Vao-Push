@@ -34,7 +34,17 @@ async function load(name) {
     "data:text/javascript;base64," + Buffer.from(js).toString("base64")
   );
 }
-const { formatValue, nodeValue, signedColor } = await load("cardDesign");
+const {
+  formatValue,
+  nodeValue,
+  signedColor,
+  enableV3,
+  visible,
+  visibleChildren,
+  stateStyle,
+  trendGeometry,
+  trendSignedColor,
+} = await load("cardDesign");
 const {
   fieldsForNode,
   wrapGroup,
@@ -189,4 +199,93 @@ test("Chart samples use timestamp spacing and native flat-series behavior", () =
       .candles[0].top,
     3,
   );
+});
+
+test("v3 fallback is fixed across feature edits and snapshots", () => {
+  const d = {
+    schema_version: 2,
+    name: "Test",
+    family: "medium",
+    layout: { id: "root", type: "number", bind: "fields.n" },
+  };
+  enableV3(d);
+  const old = JSON.stringify(d.fallback);
+  d.layout.prefix = "$";
+  enableV3(d);
+  assert.equal(JSON.stringify(d.fallback), old);
+  assert.equal(d.schema_version, 3);
+});
+test("v3 collapses absent and blank values while retaining zero and false in the correct scope", () => {
+  const n = { id: "n", type: "number", bind: "fields.n", hide_if_empty: true };
+  for (const value of [undefined, null, "", "  "])
+    assert.equal(visible(n, { fields: { n: { value } } }), false);
+  for (const value of ["0", false, 0])
+    assert.equal(visible(n, { fields: { n: { value } } }), true);
+  assert.equal(
+    visible(n, { fields: { n: { value: "1" } } }, { fields: {} }),
+    false,
+  );
+  const root = {
+    id: "root",
+    type: "column",
+    children: [{ id: "d1", type: "divider" }, n, { id: "d2", type: "divider" }],
+  };
+  assert.deepEqual(
+    visibleChildren(root, { fields: { n: { value: "0" } } }).map((n) => n.id),
+    ["n"],
+  );
+  assert.equal(visible(root, { fields: {} }), false);
+});
+test("badge state mapping and decoration retain large numeric precision", () => {
+  const n = {
+    id: "badge",
+    type: "badge",
+    states: { ok: { text: "正常", color: "#16835B" } },
+  };
+  assert.equal(nodeValue(n, { value: "ok" }), "正常");
+  assert.equal(stateStyle(n, { value: "warming" }).color, "secondary");
+  assert.equal(
+    nodeValue(
+      { id: "n", type: "number", prefix: "$", suffix: " /s", decimals: 2 },
+      { type: "decimal", value: "12345678901234567890.125" },
+    ),
+    "$12,345,678,901,234,567,890.12 /s",
+  );
+});
+test("sparkline preserves real timestamp spacing and leaves gaps", () => {
+  const s = {
+    interval_seconds: 60,
+    points: [
+      { t: "2026-11-09T00:00:00Z", value: "0" },
+      { t: "2026-11-09T00:01:00Z", value: "-2" },
+      { t: "2026-11-09T00:10:00Z", value: "3" },
+    ],
+  };
+  const g = trendGeometry(s, { type: "sparkline" });
+  assert.equal(g.segments.length, 2);
+  assert.ok(Math.abs((g.bars[1].x - 2) / 296 - 0.1) < 1e-8);
+  assert.equal(g.bars[1].positive, false);
+});
+test("sparkline retains tiny changes on very large decimal values", () => {
+  const g = trendGeometry(
+    {
+      interval_seconds: 60,
+      points: [
+        { t: "2026-11-09T00:00:00Z", value: "12345678901234567890123456.01" },
+        { t: "2026-11-09T00:01:00Z", value: "12345678901234567890123456.02" },
+      ],
+    },
+    { type: "sparkline" },
+  );
+  assert.equal(
+    trendSignedColor({
+      points: [
+        { value: "12345678901234567890123456.02" },
+        { value: "12345678901234567890123456.01" },
+      ],
+    }),
+    "#F6465D",
+  );
+  assert.equal(g.bars[0].pointY, 68);
+  assert.equal(g.bars[1].pointY, 2);
 });

@@ -20,6 +20,32 @@ public enum VaoTheme {
     }
 }
 
+/// App previews resolve the card's content and its surface in the same appearance.
+/// WidgetKit supplies its own container background and does not use this wrapper.
+public struct CardPreviewSurface: ViewModifier {
+    let theme: CardConfiguration.Theme?
+    let minimumHeight: CGFloat
+    let padding: CGFloat
+    @Environment(\.colorScheme) private var inheritedScheme
+
+    public init(theme: CardConfiguration.Theme?, minimumHeight: CGFloat = 0, padding: CGFloat = 16) {
+        self.theme = theme; self.minimumHeight = minimumHeight; self.padding = padding
+    }
+
+    public func body(content: Content) -> some View {
+        let scheme: ColorScheme = theme == .dark ? .dark : theme == .light ? .light : inheritedScheme
+        let background = scheme == .dark ? Color(red: 30/255, green: 37/255, blue: 48/255) : Color.white
+        let border = scheme == .dark ? Color(red: 48/255, green: 56/255, blue: 70/255) : Color(red: 229/255, green: 232/255, blue: 238/255)
+        content
+            .foregroundStyle(VaoTheme.text)
+            .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .topLeading)
+            .padding(padding)
+            .background(background, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(border, lineWidth: 1))
+            .environment(\.colorScheme, scheme)
+    }
+}
+
 /// Shared container registered for the app and both extensions.
 public enum PrototypeStorage {
     public static let groupID = "group.app.vaovao.push"

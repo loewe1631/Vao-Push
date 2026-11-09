@@ -1,7 +1,17 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { nodeValue, signedColor, type Node } from "./cardDesign";
+import {
+  nodeValue,
+  signedColor,
+  trendSignedColor,
+  visible,
+  visibleChildren,
+  stateStyle,
+  trendGeometry,
+  type Node,
+} from "./cardDesign";
 import { locale, tr } from "./i18n";
+import BrowserCardIcon from "./BrowserCardIcon.vue";
 import { chartGeometry } from "./cardCompatibility";
 const p = defineProps<{
   node: Node;
@@ -10,6 +20,7 @@ const p = defineProps<{
   rows: number;
   selected?: string;
   editable?: boolean;
+  legacy?: boolean;
 }>();
 const emit = defineEmits<{ select: [id: string] }>();
 const field = computed(
@@ -19,19 +30,63 @@ const field = computed(
     ],
 );
 const value = computed(() => nodeValue(p.node, field.value, locale.value));
-const signed = computed(() => signedColor(field.value));
+const signed = computed(() =>
+  p.node.type === "sparkline"
+    ? trendSignedColor(series.value)
+    : signedColor(field.value),
+);
 const color = (value?: string) =>
   ({
     primary: "var(--card-text)",
     secondary: "var(--card-muted)",
     accent: "var(--card-accent)",
+    surface: "var(--card-soft)",
   })[value || "primary"] || value;
-const style = computed(() => ({
-  color:
-    p.node.color_rule === "signed" && p.node.type !== "badge"
+const pair = (p?: { light: string; dark: string }) =>
+  p ? `light-dark(${color(p.light)},${color(p.dark)})` : undefined;
+const mapped = computed(() => stateStyle(p.node, field.value));
+const foreground = computed(() =>
+  mapped.value
+    ? pair(mapped.value.colors) || color(mapped.value.color || "secondary")
+    : p.node.color_rule === "signed"
+      ? p.node.type === "badge"
+        ? "white"
+        : signed.value
+      : pair(p.node.colors) || color(p.node.color),
+);
+const background = computed(() =>
+  mapped.value
+    ? pair(mapped.value.background_colors) ||
+      color(mapped.value.background || "surface")
+    : p.node.type === "badge" && p.node.color_rule === "signed"
       ? signed.value
-      : color(p.node.color),
-  background: p.node.background ? color(p.node.background) : "transparent",
+      : pair(p.node.background_colors) ||
+        (p.node.background
+          ? color(p.node.background)
+          : p.node.type === "badge"
+            ? "var(--card-soft)"
+            : "transparent"),
+);
+const activeChildren = computed(() =>
+  p.legacy ? p.node.children || [] : visibleChildren(p.node, p.state, p.item),
+);
+const activeItems = computed(() =>
+  (p.state?.items || [])
+    .filter((i: any) => p.node.row && visible(p.node.row, p.state, i))
+    .slice(0, Math.min(p.node.limit || 3, p.rows)),
+);
+const trend = computed(() => trendGeometry(series.value, p.node));
+const style = computed(() => ({
+  color: foreground.value,
+  background:
+    p.node.type === "badge"
+      ? p.legacy && p.node.background
+        ? color(p.node.background)
+        : "transparent"
+      : background.value,
+  border: p.node.border
+    ? `${p.node.border.width}px solid ${pair(p.node.border.colors) || color(p.node.border.color || "secondary")}`
+    : undefined,
   fontSize: (p.node.font_size ?? (p.node.type === "text" ? 13 : 16)) + "px",
   fontWeight:
     p.node.weight === "bold"
@@ -48,7 +103,7 @@ const style = computed(() => ({
     : p.node.alignment === "center"
       ? "center"
       : "left") as any,
-  flex: p.node.flex === 0 ? "0 0 auto" : "1 1 0",
+  flex: p.node.flex === 0 || p.node.type === "badge" ? "0 0 auto" : "1 1 0",
   minWidth: 0,
 }));
 const series = computed(
@@ -63,6 +118,7 @@ const candles = computed(() => geometry.value.candles);
 </script>
 <template>
   <div
+    v-if="legacy || visible(node, state, item)"
     class="card-node"
     :class="{ picked: editable && selected === node.id }"
     :style="style"
@@ -78,7 +134,7 @@ const candles = computed(() => geometry.value.candles);
       }"
     >
       <CardPreview
-        v-for="child in node.children || []"
+        v-for="child in activeChildren"
         :key="child.id"
         :node="child"
         :state="state"
@@ -86,6 +142,7 @@ const candles = computed(() => geometry.value.candles);
         :rows="rows"
         :selected="selected"
         :editable="editable"
+        :legacy="legacy"
         @select="emit('select', $event)"
       />
     </div>
@@ -98,7 +155,7 @@ const candles = computed(() => geometry.value.candles);
       }"
     >
       <CardPreview
-        v-for="child in node.children || []"
+        v-for="child in activeChildren"
         :key="child.id"
         :node="child"
         :state="state"
@@ -106,6 +163,7 @@ const candles = computed(() => geometry.value.candles);
         :rows="rows"
         :selected="selected"
         :editable="editable"
+        :legacy="legacy"
         @select="emit('select', $event)"
       />
     </div>
@@ -114,12 +172,7 @@ const candles = computed(() => geometry.value.candles);
       class="preview-list"
       :style="{ gap: (node.spacing ?? 8) + 'px' }"
     >
-      <template
-        v-for="(record, index) in (state?.items || []).slice(
-          0,
-          Math.min(node.limit || 3, rows),
-        )"
-        :key="record.item_id"
+      <template v-for="(record, index) in activeItems" :key="record.item_id"
         ><CardPreview
           v-if="node.row"
           :node="node.row"
@@ -128,14 +181,11 @@ const candles = computed(() => geometry.value.candles);
           :rows="rows"
           :selected="selected"
           :editable="editable"
+          :legacy="legacy"
           @select="emit('select', $event)" />
-        <hr
-          v-if="
-            Number(index) <
-            Math.min(state.items.length, node.limit || 3, rows) - 1
-          "
+        <hr v-if="Number(index) < activeItems.length - 1"
       /></template>
-      <span v-if="!state?.items?.length" class="placeholder">{{
+      <span v-if="!activeItems.length" class="placeholder">{{
         tr("暂无列表数据", "No list items yet")
       }}</span>
     </div>
@@ -144,6 +194,51 @@ const candles = computed(() => geometry.value.candles);
       v-else-if="node.type === 'spacer'"
       :style="{ minHeight: (node.spacing ?? 4) + 'px' }"
     />
+    <BrowserCardIcon v-else-if="node.type === 'icon'" :node="node" />
+    <svg
+      v-else-if="node.type === 'sparkline'"
+      viewBox="0 0 300 70"
+      preserveAspectRatio="none"
+      :style="{ height: (node.height || 32) + 'px', minHeight: 0 }"
+      role="img"
+      :aria-label="node.label || 'Trend'"
+    >
+      <template v-if="node.chart_style === 'bar'">
+        <rect
+          v-for="(bar, index) in trend.bars"
+          :key="index"
+          :x="bar.x - bar.width / 2"
+          :y="bar.y"
+          :width="bar.width"
+          :height="bar.height"
+          :fill="
+            node.color_rule === 'signed'
+              ? bar.positive
+                ? '#16A667'
+                : '#F6465D'
+              : foreground
+          "
+        />
+      </template>
+      <template v-else>
+        <polyline
+          v-for="(segment, index) in trend.segments"
+          :key="index"
+          :points="segment"
+          fill="none"
+          :stroke="foreground"
+          stroke-width="1.5"
+        />
+        <circle
+          v-for="(point, index) in trend.bars"
+          :key="index"
+          :cx="point.x"
+          :cy="point.pointY"
+          r="1.5"
+          :fill="foreground"
+        />
+      </template>
+    </svg>
     <div v-else-if="node.type === 'chart'" class="native-chart">
       <span v-if="!series" class="placeholder">{{
         tr("暂无历史数据", "No chart history yet")
@@ -187,9 +282,13 @@ const candles = computed(() => geometry.value.candles);
         v-if="node.type === 'badge'"
         class="node-badge"
         :style="{
-          background:
-            node.color_rule === 'signed' ? signed : 'var(--card-soft)',
-          color: node.color_rule === 'signed' ? 'white' : color(node.color),
+          background: legacy
+            ? node.color_rule === 'signed'
+              ? signed
+              : 'var(--card-soft)'
+            : background,
+          color: foreground,
+          borderRadius: (node.radius ?? 5) + 'px',
         }"
         >{{ value }}</span
       ><span v-else class="node-value">{{ value }}</span>

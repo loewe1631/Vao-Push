@@ -15,7 +15,7 @@ case "$(uname -m)" in
   *) echo '不支持的架构 / Unsupported architecture' >&2; exit 1 ;;
 esac
 [[ "$(uname -s)" == Linux ]] || { echo '仅支持 Linux / Linux is required' >&2; exit 1; }
-release_version=${VAO_VERSION:-1.1.0}
+release_version=${VAO_VERSION:-1.2.0}
 [[ "$release_version" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$ ]] || exit 1
 release_base=${VAO_RELEASE_BASE:-https://github.com/loewe1631/Vao-Push/releases/download/v$release_version}
 release_file=vao-push-$release_version-linux-$release_arch.tar.gz

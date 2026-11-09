@@ -1,5 +1,16 @@
 # 更新记录 / Changelog
 
+## 1.2.0 — 2026-11-09
+
+- Fix card preview theme mismatches and compressed badge text.
+- Add schema v3 with explicit v1/v2 fallback layouts, conditional visibility, light/dark colors, status badges, borders and numeric prefixes/suffixes.
+- Add SF Symbols, bounded HTTPS card icons, timestamp sparklines and mini bars.
+- Add opt-in per-source history with sampling, retention and size limits, plus editor controls, legacy preview and publication checks.
+- Preserve compatible local adjustments across representation upgrades and retain size layouts with older servers; retry transient update downloads without weakening signature or source verification.
+- Reserve snapshot capacity before enabling history, so configured rules cannot exceed the total series limit.
+
+Server/Web 1.2.0 is published separately from the App Store client. New native card capabilities require App 1.2; App 1.0/1.1 remains supported through fixed fallback layouts.
+
 ## 1.1.0
 
 ### 卡片工作台维护修正

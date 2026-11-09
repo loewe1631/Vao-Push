@@ -4,7 +4,9 @@
 
 Vao Push is a free, open-source, self-hosted notification and Home Screen data card system. Connect the iOS / iPadOS app to your own server, then send messages or structured data through HTTP, scripts, business systems, or the Web console.
 
-## Server 1.1.0
+Version 1.2 adds conditional card content, light/dark colors, state badges, system/HTTPS icons, sparklines, mini bars, borders and numeric affixes. Administrators can opt into bounded history accumulation per data source. New card capabilities require App 1.2; App Store availability is separate from this server/Web release. App 1.0/1.1 retains stable fallback layouts. See [the capability and compatibility guide](docs/card-design-v3.md).
+
+## Server 1.2.0
 
 - Named push lists with independent URLs, editable recipients, renaming and deletion. Existing default sending URLs keep working.
 - Multiple widget-size layouts for one card and data source, with explicit editing, fixed previews and overflow warnings. Older apps keep using the default layout.
@@ -14,12 +16,12 @@ Vao Push is a free, open-source, self-hosted notification and Home Screen data c
 
 This release updates the server and Web UI. It does not announce a simultaneous iOS app release. Native size-specific layouts and notification avatars require a supporting client; iOS app updates continue through the App Store.
 
-[Download Server 1.1.0](https://github.com/loewe1631/Vao-Push/releases/tag/v1.1.0) · [Installation and upgrades](deploy/PUBLIC-INSTALL.md) · [Website](https://push.vaovao.app/en/)
+[Download Server 1.2.0](https://github.com/loewe1631/Vao-Push/releases/tag/v1.2.0) · [Installation and upgrades](deploy/PUBLIC-INSTALL.md) · [Website](https://push.vaovao.app/en/)
 
 ## New installation
 
 ```sh
-curl -fsSL https://github.com/loewe1631/Vao-Push/releases/download/v1.1.0/install.sh -o vao-push-install.sh
+curl -fsSL https://github.com/loewe1631/Vao-Push/releases/download/v1.2.0/install.sh -o vao-push-install.sh
 sudo bash vao-push-install.sh
 ```
 
@@ -28,7 +30,7 @@ sudo bash vao-push-install.sh
 **Do not reinstall or reset your data.** Run one in-place upgrade to retain configuration, passwords, devices and data while enabling Web updates:
 
 ```sh
-curl -fsSL https://github.com/loewe1631/Vao-Push/releases/download/v1.1.0/install.sh -o vao-push-install.sh
+curl -fsSL https://github.com/loewe1631/Vao-Push/releases/download/v1.2.0/install.sh -o vao-push-install.sh
 sudo bash vao-push-install.sh --upgrade --prefix /opt/vao-push
 ```
 

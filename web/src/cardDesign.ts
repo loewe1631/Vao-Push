@@ -1,5 +1,29 @@
 import { randomID } from "./random";
+export type ColorPair = { light: string; dark: string };
+export type StateStyle = {
+  text?: string;
+  color?: string;
+  colors?: ColorPair;
+  background?: string;
+  background_colors?: ColorPair;
+};
 export type Node = {
+  visible_when?: string;
+  hide_if_empty?: boolean;
+  colors?: ColorPair;
+  background_colors?: ColorPair;
+  states?: Record<string, StateStyle>;
+  unknown_state?: StateStyle;
+  border?: { color?: string; colors?: ColorPair; width: number };
+  prefix?: string;
+  suffix?: string;
+  symbol?: string;
+  image_url?: string;
+  icon_size?: number;
+  chart_style?: string;
+  height?: number;
+  min_points?: number;
+  gap_seconds?: number;
   id: string;
   type: string;
   text?: string;
@@ -24,7 +48,8 @@ export type Node = {
   row?: Node;
 };
 export type Design = {
-  schema_version: 1 | 2;
+  schema_version: 1 | 2 | 3;
+  fallback?: { layout: Node; layouts?: Partial<Record<string, Node>> };
   name: string;
   family: string;
   theme?: string;
@@ -42,6 +67,8 @@ export const kinds = [
   "divider",
   "spacer",
   "chart",
+  "icon",
+  "sparkline",
 ];
 export const names: Record<string, string> = {
   row: "横向排列",
@@ -54,6 +81,8 @@ export const names: Record<string, string> = {
   divider: "分隔线",
   spacer: "留白",
   chart: "历史图表",
+  icon: "图标",
+  sparkline: "迷你趋势",
 };
 export const namesEn: Record<string, string> = {
   row: "Row",
@@ -66,6 +95,8 @@ export const namesEn: Record<string, string> = {
   divider: "Divider",
   spacer: "Spacer",
   chart: "Chart",
+  icon: "Icon",
+  sparkline: "Sparkline",
 };
 export function kindName(type: string, lang: "zh" | "en" = "zh"): string {
   return (lang === "en" ? namesEn[type] : names[type]) || type;
@@ -92,8 +123,11 @@ export function newNode(type: string, lang: "zh" | "en" = "zh"): Node {
         { id: n.id + "_price", type: "number", bind: "fields.price" },
       ],
     };
-  } else if (type === "chart") n.bind = "series.history";
-  else if (["number", "badge"].includes(type)) n.bind = "fields.price";
+  } else if (["chart", "sparkline"].includes(type)) n.bind = "series.history";
+  else if (type === "icon") {
+    n.symbol = "sf:server.rack";
+    n.icon_size = 20;
+  } else if (["number", "badge"].includes(type)) n.bind = "fields.price";
   else if (type === "text") n.text = defaultText;
   return n;
 }
@@ -357,9 +391,13 @@ export function nodeValue(
   field: any,
   lang: "zh" | "en" = "zh",
 ): string {
-  return node.text !== undefined && node.text !== null
-    ? node.text
-    : formatValue(field, node.decimals, node.format, lang);
+  const mapped = stateStyle(node, field);
+  if (mapped?.text !== undefined) return mapped.text;
+  if (node.text !== undefined && node.text !== null) return node.text;
+  const value = formatValue(field, node.decimals, node.format, lang);
+  return nonempty(field?.value)
+    ? (node.prefix || "") + value + (node.suffix || "")
+    : value;
 }
 export function signedColor(field: any): string {
   const raw = field?.value;
@@ -371,4 +409,136 @@ export function signedColor(field: any): string {
   )
     return "var(--card-muted)";
   return raw.startsWith("-") && /[1-9]/.test(raw) ? "#F6465D" : "#16A667";
+}
+
+export function enableV3(design: Design) {
+  if (design.schema_version === 3) return;
+  design.fallback = JSON.parse(
+    JSON.stringify({ layout: design.layout, layouts: design.layouts }),
+  );
+  design.schema_version = 3;
+}
+export function nonempty(value: any): boolean {
+  return (
+    value !== null &&
+    value !== undefined &&
+    (typeof value !== "string" || value.trim().length > 0)
+  );
+}
+export function stateStyle(node: Node, field: any): StateStyle | undefined {
+  if (!node.states && !node.unknown_state) return;
+  return (
+    node.states?.[String(field?.value ?? "")] ??
+    node.unknown_state ?? { color: "secondary", background: "surface" }
+  );
+}
+export function visible(node: Node, state: any, item?: any): boolean {
+  const scope = item ?? state ?? {};
+  if (
+    node.visible_when &&
+    !nonempty(scope.fields?.[node.visible_when.slice(7)]?.value)
+  )
+    return false;
+  if (
+    node.hide_if_empty &&
+    (node.text !== undefined
+      ? !nonempty(node.text)
+      : node.bind?.startsWith("fields.") &&
+        !nonempty(scope.fields?.[node.bind.slice(7)]?.value))
+  )
+    return false;
+  if (node.type === "sparkline")
+    return (
+      (scope.series?.[node.bind?.slice(7) || ""]?.points?.length || 0) >=
+      Math.max(2, node.min_points || 2)
+    );
+  if (node.children)
+    return node.children.some(
+      (n) => !["divider", "spacer"].includes(n.type) && visible(n, state, item),
+    );
+  if (node.type === "list" && node.hide_if_empty)
+    return (state?.items || []).some(
+      (i: any) => node.row && visible(node.row, state, i),
+    );
+  return true;
+}
+export function visibleChildren(node: Node, state: any, item?: any): Node[] {
+  const output: Node[] = [];
+  for (const n of (node.children || []).filter((n) =>
+    visible(n, state, item),
+  )) {
+    if (
+      ["divider", "spacer"].includes(n.type) &&
+      (!output.length || ["divider", "spacer"].includes(output.at(-1)!.type))
+    )
+      continue;
+    output.push(n);
+  }
+  while (output.length && ["divider", "spacer"].includes(output.at(-1)!.type))
+    output.pop();
+  return output;
+}
+export function trendGeometry(series: any, node: Node) {
+  const samples = (series?.points || []).flatMap((p: any) => {
+    const raw = p.value ?? p.c,
+      t = Date.parse(p.t);
+    if (
+      typeof raw !== "string" ||
+      !/^-?[0-9]+(\.[0-9]+)?$/.test(raw) ||
+      !Number.isFinite(t)
+    )
+      return [];
+    const negative = raw.startsWith("-");
+    const [whole, fraction = ""] = raw.replace(/^-/, "").split(".");
+    const v = BigInt(whole + fraction.padEnd(18, "0")) * (negative ? -1n : 1n);
+    return [{ t, v }];
+  });
+  if (!samples.length) return { segments: [] as string[], bars: [] as any[] };
+  const numbers: bigint[] = samples.map((p: any) => p.v);
+  let low = numbers.reduce((a, b) => (a < b ? a : b)),
+    high = numbers.reduce((a, b) => (a > b ? a : b));
+  if (node.chart_style === "bar") {
+    if (low > 0n) low = 0n;
+    if (high < 0n) high = 0n;
+  }
+  const span = high === low ? 1n : high - low;
+  const duration = Math.max(1, samples.at(-1).t - samples[0].t),
+    gap = (node.gap_seconds || series.interval_seconds * 3) * 1000;
+  const segments: string[][] = [[]];
+  let previous = samples[0].t;
+  const bars = samples.map((p: any) => {
+    const x = 2 + ((p.t - samples[0].t) / duration) * 296,
+      y = high === low ? 35 : 2 + (Number(high - p.v) / Number(span)) * 66,
+      base = high === low ? 35 : 2 + (Number(high) / Number(span)) * 66;
+    if (p.t - previous > gap) segments.push([]);
+    segments.at(-1)!.push(`${x},${y}`);
+    previous = p.t;
+    return {
+      x,
+      pointY: y,
+      y: Math.min(y, base),
+      height: Math.max(1, Math.abs(base - y)),
+      width: Math.min(12, (296 / samples.length) * 0.65),
+      positive: p.v >= 0n,
+    };
+  });
+  return { segments: segments.map((s) => s.join(" ")), bars };
+}
+
+export function trendSignedColor(series: any): string {
+  const points = series?.points || [];
+  if (points.length < 2) return "var(--card-muted)";
+  function decimal(v: any): bigint | undefined {
+    if (typeof v !== "string" || !/^-?[0-9]+(\.[0-9]+)?$/.test(v)) return;
+    const negative = v.startsWith("-");
+    const [w, f = ""] = v.replace(/^-/, "").split(".");
+    return BigInt(w + f.padEnd(18, "0")) * (negative ? -1n : 1n);
+  }
+  const a = decimal(points[0].value ?? points[0].c),
+    b = decimal(points.at(-1).value ?? points.at(-1).c);
+  return a === undefined || b === undefined
+    ? "var(--card-muted)"
+    : b < a
+      ? "#F6465D"
+      : "#16A667";
 }

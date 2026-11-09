@@ -1,11 +1,11 @@
 # Vao Push 安装与升级 / Installation and Upgrades
 
-服务端1.1.0提供Linux amd64、arm64预构建包，使用Python 3、systemd和Docker，不要求安装Go或Node。
+服务端1.2.0提供Linux amd64、arm64预构建包，使用Python 3、systemd和Docker，不要求安装Go或Node。
 
 ## 首次安装 / New installation
 
 ```sh
-curl -fsSL https://github.com/loewe1631/Vao-Push/releases/download/v1.1.0/install.sh -o vao-push-install.sh
+curl -fsSL https://github.com/loewe1631/Vao-Push/releases/download/v1.2.0/install.sh -o vao-push-install.sh
 sudo bash vao-push-install.sh
 ```
 
@@ -16,7 +16,7 @@ Official packages configure the product's production APNs identity and signed We
 ## 已安装用户：无需重装 / Existing users: no reinstall
 
 ```sh
-curl -fsSL https://github.com/loewe1631/Vao-Push/releases/download/v1.1.0/install.sh -o vao-push-install.sh
+curl -fsSL https://github.com/loewe1631/Vao-Push/releases/download/v1.2.0/install.sh -o vao-push-install.sh
 sudo bash vao-push-install.sh --upgrade --prefix /opt/vao-push
 ```
 
@@ -47,7 +47,7 @@ Program rollback is not database rollback. Backups contain secrets. Protect them
 
 ## 客户端兼容与推送身份
 
-服务端1.1.0保留App 1.0.0的已有功能；多尺寸原生布局和通知头像需支持客户端。手机App通过App Store更新，Web不会代替商店安装手机软件。
+服务端1.2.0保留App 1.0.0 / 1.1.0的已有功能；新卡片能力需App 1.2.0。手机App通过App Store更新，Web不会代替商店安装手机软件。
 
 官方预构建安装包附带本产品专用Production APNs身份，普通用户无需填写苹果Key ID、Team ID或私钥。源码不包含该私钥；已有人工配置在升级时保留，不因普通升级轮换。
 
@@ -63,3 +63,9 @@ The server package includes only this product's dedicated production push identi
 已安装早期 1.1.0 时，可再次运行正式安装器的 `--upgrade --prefix <安装目录>`。不同内容会保存到独立目录，原程序及数据保留，并执行备份和健康检查；重复运行完全相同的包不会重新切换。旧版 Web 更新器只比较版本号，同版本维护包请使用此命令刷新。不要手动覆盖正在运行的 releases 目录。
 
 For an earlier 1.1.0 installation, rerun the official installer with `--upgrade --prefix <installation>`. The refreshed package uses a separate content directory with backup and health checks. Repeating the identical package is a no-op. Older Web updaters compare version numbers and do not offer same-version maintenance rebuilds.
+
+## 1.2.0 card compatibility / 卡片兼容
+
+New card features require App 1.2.0; App 1.0/1.1 receives the saved compatible layouts. Existing bindings, messages and card adjustments remain. After saving a v3 design, rolling back to a server before 1.2 requires the matching pre-upgrade database backup as well as the old program. A program-only rollback cannot interpret v3 designs.
+
+新卡片能力需 App 1.2.0；旧 App 使用保存的兼容布局。写入 v3 设计后若退回旧于 1.2 的服务端，须配合相应升级前数据库备份，不能仅替换程序。正式升级前应保留备份和恢复窗口。

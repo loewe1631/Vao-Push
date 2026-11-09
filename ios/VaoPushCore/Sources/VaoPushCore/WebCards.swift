@@ -7,16 +7,19 @@ public struct CardDesign: Codable, Equatable, Sendable {
     public var theme: String?
     public var layout: CardNode
     public var layouts: [String: CardNode]? = nil
-    enum CodingKeys: String, CodingKey { case schemaVersion = "schema_version"; case name, family, theme, layout, layouts }
+    public var fallback: CardFallback? = nil
+    enum CodingKeys: String, CodingKey { case schemaVersion = "schema_version"; case name, family, theme, layout, layouts, fallback }
 
     public func layout(for family: String) -> CardNode { layouts?[family] ?? layout }
     public func nodes(for family: String) -> [CardNode] { var value=self;value.layout=layout(for: family);return value.nodes }
-    public var legacy: CardDesign { var value=self;value.schemaVersion=1;value.layouts=nil;return value }
+    public var legacy: CardDesign { projected(schema: 1) }
     public var nodes: [CardNode] {
         func flatten(_ n: CardNode) -> [CardNode] { [n] + (n.children ?? []).flatMap(flatten) + (n.row.map { flatten($0.node) } ?? []) }
         return flatten(layout)
     }
     public func validate() throws {
+        if schemaVersion == 3 { try validateV3(); return }
+        guard fallback == nil, !nodes.contains(where: { $0.hasV3 }), !(layouts ?? [:]).values.contains(where: { tree in Self.flatten(tree).contains(where: { $0.hasV3 }) }) else { throw CoreError.invalid("新节点属性需要 schema 3") }
         guard [1, 2].contains(schemaVersion), !name.isEmpty, name.utf8.count <= 120,
               ["small", "medium", "large", "extraLarge"].contains(family),
               ["system", "light", "dark"].contains(theme ?? "system"),
@@ -79,9 +82,27 @@ public struct CardNode: Codable, Equatable, Identifiable, Sendable {
     public var source: String?
     public var children: [CardNode]?
     public var row: CardRow?
+    public var visibleWhen: String? = nil
+    public var hideIfEmpty: Bool? = nil
+    public var colors: CardColorPair? = nil
+    public var backgroundColors: CardColorPair? = nil
+    public var states: [String: CardStateStyle]? = nil
+    public var unknownState: CardStateStyle? = nil
+    public var border: CardBorder? = nil
+    public var prefix: String? = nil
+    public var suffix: String? = nil
+    public var symbol: String? = nil
+    public var imageURL: String? = nil
+    public var iconSize: Int? = nil
+    public var chartStyle: String? = nil
+    public var height: Int? = nil
+    public var minPoints: Int? = nil
+    public var gapSeconds: Int? = nil
     enum CodingKeys: String, CodingKey {
         case id,type,text,label,bind,format,decimals,color,background,weight,alignment,spacing,padding,radius,flex,columns,limit,source,children,row
         case colorRule = "color_rule", fontSize = "font_size"
+        case visibleWhen = "visible_when", hideIfEmpty = "hide_if_empty", backgroundColors = "background_colors", unknownState = "unknown_state", imageURL = "image_url", iconSize = "icon_size", chartStyle = "chart_style", minPoints = "min_points", gapSeconds = "gap_seconds"
+        case colors, states, border, prefix, suffix, symbol, height
     }
 }
 public struct NodeAdjustment: Codable, Equatable, Sendable {
@@ -127,8 +148,8 @@ public struct SubscribedCard: Codable, Equatable, Sendable {
             guard previous.id == cardID, card.streamID == snapshot.streamID else { throw CoreError.streamIdentityChanged }
             let incoming = try ProtocolRules.revision(revision), current = try ProtocolRules.revision(previous.revision)
             guard incoming >= current else { return card }
-            if incoming == current && previous.design != design && previous.design != design.legacy && previous.design.legacy != design { throw CoreError.conflictingRevision }
-            if incoming == current && previous.design.schemaVersion == 2 && design.schemaVersion == 1 { return card }
+            if incoming == current && !previous.design.representsSamePublication(as: design) { throw CoreError.conflictingRevision }
+            if incoming == current && previous.design.schemaVersion > design.schemaVersion { return card }
             let old = Dictionary(uniqueKeysWithValues: previous.design.nodes.map { ($0.id, $0.type) })
             let next = Dictionary(uniqueKeysWithValues: design.nodes.map { ($0.id, $0.type) })
             for id in previous.adjustments.nodes.keys where old[id] != next[id] {
@@ -149,11 +170,14 @@ public struct SubscribedCard: Codable, Equatable, Sendable {
 
 public final class CardClient: Sendable {
     private let session: URLSession
+    private let ownsSession: Bool
+    init(session: URLSession) { self.session = session; ownsSession = false }
     public init() {
+        ownsSession = true
         let config = URLSessionConfiguration.ephemeral; config.httpShouldSetCookies = false; config.urlCache = nil; config.timeoutIntervalForRequest = 15
         session = URLSession(configuration: config, delegate: RejectRedirects(), delegateQueue: nil)
     }
-    deinit { session.invalidateAndCancel() }
+    deinit { if ownsSession { session.invalidateAndCancel() } }
     private struct Envelope<T: Decodable>: Decodable { var data: T }
     private struct CardIdentity: Decodable { var card_id: String }
     private struct SubscriptionList: Decodable { struct Item: Decodable { var card_id: String }; var cards: [Item] }
@@ -182,18 +206,34 @@ public final class CardClient: Sendable {
     }
     public func fetch(base: URL, token: String, id: String) async throws -> SubscribedCard {
         guard id.range(of: "^card_[a-f0-9]{32}$", options: .regularExpression) != nil else { throw CoreError.invalid("卡片标识无效") }
-        let result: SubscribedCard = try await request(base, "v1/card-subscriptions/" + id, token)
-        guard result.cardID == id else { throw DeviceClientError.invalidResponse }; return result
+        let path = "v1/card-subscriptions/" + id
+        var result: SubscribedCard = try await request(base, path, token)
+        guard result.cardID == id else { throw DeviceClientError.invalidResponse }
+        try result.design.validate(); try ProtocolRules.validate(result.snapshot)
+        // Servers released before schema 3 recognize only an exact header value of 2.
+        // Retry their v1 response without discarding a newer publication or snapshot.
+        if result.design.schemaVersion == 1,
+           let compatible: SubscribedCard = try? await request(base, path, token, schema: "2"),
+           compatible.cardID == id, compatible.design.schemaVersion == 2,
+           compatible.snapshot.streamID == result.snapshot.streamID,
+           let next = try? ProtocolRules.revision(compatible.revision), let current = try? ProtocolRules.revision(result.revision), next >= current,
+           let nextData = try? ProtocolRules.revision(compatible.snapshot.revision), let currentData = try? ProtocolRules.revision(result.snapshot.revision), nextData >= currentData,
+           (try? compatible.design.validate()) != nil, (try? ProtocolRules.validate(compatible.snapshot)) != nil {
+            result = compatible
+        }
+        let design = result.design
+        Task(priority: .utility) { await CardIconCache.shared.prefetch(design) }
+        return result
     }
     public func unsubscribe(base: URL, token: String, id: String) async throws {
         guard id.range(of: "^card_[a-f0-9]{32}$", options: .regularExpression) != nil else { throw CoreError.invalid("卡片标识无效") }
         let _: OK = try await request(base, "v1/card-subscriptions/" + id, token, method: "DELETE")
     }
-    private func request<T: Decodable>(_ base: URL, _ path: String, _ token: String, method: String = "GET", body: [String: String]? = nil) async throws -> T {
+    private func request<T: Decodable>(_ base: URL, _ path: String, _ token: String, method: String = "GET", body: [String: String]? = nil, schema: String = "3") async throws -> T {
         let base = try ServerConnection.endpoint(base.absoluteString)
         guard token.range(of: "^[a-fA-F0-9]{64}$", options: .regularExpression) != nil else { throw DeviceClientError.invalidResponse }
         var r = URLRequest(url: base.appendingPathComponent(path)); r.httpMethod = method
-        r.setValue("Bearer " + token, forHTTPHeaderField: "Authorization"); r.setValue("application/json", forHTTPHeaderField: "Accept"); r.setValue("2", forHTTPHeaderField: "X-Vao-Card-Schema")
+        r.setValue("Bearer " + token, forHTTPHeaderField: "Authorization"); r.setValue("application/json", forHTTPHeaderField: "Accept"); r.setValue(schema, forHTTPHeaderField: "X-Vao-Card-Schema")
         if let body { r.httpBody = try JSONEncoder().encode(body); r.setValue("application/json", forHTTPHeaderField: "Content-Type") }
         let (data, response) = try await session.data(for: r)
         guard let http = response as? HTTPURLResponse, data.count <= 128 * 1024,

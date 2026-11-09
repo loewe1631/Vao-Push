@@ -23,10 +23,10 @@ func validateDesignBindings(design CardDesign, raw []byte) error {
 			}
 			values, _ := scope[group].(map[string]any)
 			value, exists := values[key]
-			if !exists {
+			if !exists && !node.HideIfEmpty && node.VisibleWhen == "" && node.Type != "sparkline" {
 				return bad("unmatched_binding", path+": "+node.Bind+" 不存在于当前数据作用域。")
 			}
-			if node.Type == "number" {
+			if exists && node.Type == "number" {
 				field, _ := value.(map[string]any)
 				kind, _ := field["type"].(string)
 				if !contains([]string{"decimal", "integer", "percent"}, kind) {
@@ -69,6 +69,9 @@ func validateDesignBindings(design CardDesign, raw []byte) error {
 		if e := visit(layout, state, "$.layouts."+family); e != nil {
 			return e
 		}
+	}
+	if design.Fallback != nil {
+		return validateDesignBindings(projectCard(design, 2), raw)
 	}
 	return nil
 }

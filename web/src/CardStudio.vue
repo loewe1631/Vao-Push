@@ -2,6 +2,8 @@
 import { randomID } from "./random";
 import { copyText } from "./clipboard";
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
+import CardCapabilitiesEditor from "./CardCapabilitiesEditor.vue";
+import SourceHistory from "./SourceHistory.vue";
 import CardPreview from "./CardPreview.vue";
 import CardTree from "./CardTree.vue";
 import CardAccess from "./CardAccess.vue";
@@ -19,6 +21,7 @@ import {
 } from "./studioWorkflow";
 import {
   sampleState,
+  enableV3,
   newNode,
   allNodes,
   parentOf,
@@ -171,7 +174,7 @@ const filteredCards = computed(() =>
 );
 const leaves = computed(() =>
   allNodes(editingLayout.value).filter((n) =>
-    ["text", "number", "badge", "chart"].includes(n.type),
+    ["text", "number", "badge", "chart", "icon", "sparkline"].includes(n.type),
   ),
 );
 const selectedField = computed(() =>
@@ -194,7 +197,10 @@ const availableFields = computed(() => {
     source.value?.state || previewState.value,
   );
   return Object.entries(values).map(([key, value]: [string, any]) => ({
-    path: (node.value?.type === "chart" ? "series." : "fields.") + key,
+    path:
+      (["chart", "sparkline"].includes(node.value?.type || "")
+        ? "series."
+        : "fields.") + key,
     label: (value.label || key) + " · " + key + " · " + value.type,
   }));
 });
@@ -440,6 +446,15 @@ const design = ref<Design>(
   code = ref(JSON.stringify(design.value, null, 2)),
   codeDirty = ref(false),
   saved = ref("");
+function changeFallback(event: Event) {
+  try {
+    const value = JSON.parse((event.target as HTMLTextAreaElement).value);
+    if (!value?.layout) throw Error();
+    design.value.fallback = value;
+  } catch {
+    error.value = tr("旧版布局 JSON 无效", "Invalid legacy layout JSON");
+  }
+}
 const source = computed(() =>
   sources.value.find((s) => s.id === sourceID.value),
 );
@@ -448,6 +463,15 @@ const node = computed(() =>
 );
 const previewFamily = ref("medium");
 const previewAppearance = ref("system");
+const previewClient = ref("current");
+const previewNode = computed(() => {
+  const fallback = design.value.fallback;
+  if (previewClient.value !== "current" && fallback)
+    return previewClient.value === "v1"
+      ? fallback.layout
+      : fallback.layouts?.[previewFamily.value] || fallback.layout;
+  return editingLayout.value;
+});
 const editFamily = ref("default");
 const editingLayout = computed<Node>({
   get: () =>
@@ -476,7 +500,7 @@ function copyLayoutToSize() {
   )
     return;
   const layout = JSON.parse(JSON.stringify(editingLayout.value));
-  design.value.schema_version = 2;
+  if (design.value.schema_version === 1) design.value.schema_version = 2;
   design.value.layouts = { ...design.value.layouts, [family]: layout };
   editFamily.value = family;
   selectedID.value = layout.id;
@@ -625,7 +649,9 @@ async function importCode() {
     : "default";
   selectedID.value =
     allNodes(editingLayout.value).find((n) =>
-      ["text", "number", "badge", "chart"].includes(n.type),
+      ["text", "number", "badge", "chart", "icon", "sparkline"].includes(
+        n.type,
+      ),
     )?.id || editingLayout.value.id;
   codeDirty.value = false;
   code.value = currentCode();
@@ -677,7 +703,9 @@ function loadCard(card: Row) {
     : "default";
   selectedID.value =
     allNodes(editingLayout.value).find((n) =>
-      ["text", "number", "badge", "chart"].includes(n.type),
+      ["text", "number", "badge", "chart", "icon", "sparkline"].includes(
+        n.type,
+      ),
     )?.id || editingLayout.value.id;
   editorData.value = JSON.stringify(dataExample(source.value?.state), null, 2);
   integrationOpen.value = !source.value?.state;
@@ -801,6 +829,7 @@ function groupSelection() {
   advancedLayout.value = true;
 }
 function add(kind: string) {
+  if (["icon", "sparkline"].includes(kind)) enableV3(design.value);
   const created =
     kind === "text-pill"
       ? pillNode(
@@ -2633,7 +2662,46 @@ onUnmounted(() => {
                   }}
                 </p>
               </div>
+              <button
+                v-if="design.schema_version !== 3"
+                class="secondary"
+                @click="enableV3(design)"
+              >
+                {{
+                  tr(
+                    "启用 1.2 能力并保存旧版布局",
+                    "Enable 1.2 features and retain legacy layouts",
+                  )
+                }}
+              </button>
+              <details v-if="design.fallback">
+                <summary>
+                  {{
+                    tr(
+                      "旧 App 兼容布局（固定保存）",
+                      "Legacy App layouts (saved independently)",
+                    )
+                  }}
+                </summary>
+                <p>
+                  {{
+                    tr(
+                      "新功能修改不会自动改写旧版布局。发布前请检查旧版显示。",
+                      "Feature edits do not alter legacy layouts. Check the fallback before publication.",
+                    )
+                  }}
+                </p>
+                <textarea
+                  :value="JSON.stringify(design.fallback, null, 2)"
+                  @change="changeFallback"
+                  aria-label="Legacy layouts JSON"
+                />
+              </details>
               <div v-if="node" class="node-inspector">
+                <CardCapabilitiesEditor
+                  v-if="design.schema_version === 3"
+                  :node="node"
+                />
                 <h3>
                   {{ kindName(node.type, locale) }}
                   <small v-if="advancedLayout">{{ node.id }}</small>
@@ -2896,6 +2964,7 @@ onUnmounted(() => {
             </div>
           </section>
           <div class="studio-preview">
+            <SourceHistory v-if="sourceID" :sourceID="sourceID" :csrf="csrf" />
             <section class="panel">
               <h2>{{ tr("小组件预览", "Widget Preview") }}</h2>
               <p v-if="unmatched.length" class="banner error">
@@ -2982,6 +3051,14 @@ onUnmounted(() => {
                   <option value="dark">{{ tr("深色", "Dark") }}</option>
                 </select></label
               >
+              <label v-if="design.fallback"
+                >{{ tr("客户端兼容预览", "Client compatibility preview")
+                }}<select v-model="previewClient">
+                  <option value="current">App 1.2</option>
+                  <option value="v2">App 1.1</option>
+                  <option value="v1">App 1.0</option>
+                </select></label
+              >
               <div class="preview-stage">
                 <div
                   ref="canvas"
@@ -2992,7 +3069,8 @@ onUnmounted(() => {
                   ]"
                 >
                   <CardPreview
-                    :node="editingLayout"
+                    :node="previewNode"
+                    :legacy="previewClient !== 'current'"
                     :state="previewState"
                     :rows="
                       previewFamily === 'small'
@@ -3077,7 +3155,7 @@ onUnmounted(() => {
         <p>
           {{
             tr(
-              "App 1.0.0 使用默认布局；App 1.1.0 使用对应尺寸布局。发布将更新已订阅设备。",
+              "App 1.0.0 使用兼容默认布局；App 1.1.0 使用兼容尺寸布局；App 1.2.0 支持新能力。发布将更新已订阅设备。",
               "App 1.0.0 uses the default layout; App 1.1.0 uses matching size layouts. Publishing updates subscribed devices.",
             )
           }}
@@ -3518,5 +3596,14 @@ onUnmounted(() => {
 }
 .publication-warnings li {
   margin: 10px 0;
+}
+</style>
+
+<style>
+.widget-canvas {
+  color-scheme: light;
+}
+.widget-canvas.dark {
+  color-scheme: dark;
 }
 </style>

@@ -105,3 +105,7 @@ Web 可提供“复制AI生成说明”：包括卡片描述版本、可用组�
 ## 1.1.0：按尺寸编辑
 
 默认布局始终保留；在尺寸预览中明确复制当前布局，才创建该尺寸覆盖。覆盖独立保存，可恢复使用默认。单布局JSON导入多布局卡片前会提示作用范围，其他尺寸不被悄悄覆盖。固定画布会提示溢出；原生字体与系统边距仍须在实际设备核对。旧客户端继续使用默认布局。
+
+## App 1.2 capabilities
+
+New designs can opt into [schema v3](card-design-v3.md) with fixed v1/v2 fallback layouts. Existing schemas remain supported.

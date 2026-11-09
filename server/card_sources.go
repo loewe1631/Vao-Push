@@ -271,12 +271,17 @@ func (a *App) pollSource(ctx context.Context, source, user string) error {
 }
 func (a *App) sourceWorker(ctx context.Context) {
 	tick := time.NewTicker(15 * time.Second)
+	lastHistoryPrune := time.Time{}
 	defer tick.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-tick.C:
+			if time.Since(lastHistoryPrune) > time.Hour {
+				_ = a.pruneHistory(ctx)
+				lastHistoryPrune = time.Now()
+			}
 			rows, e := rowsJSON(ctx, a.db, "SELECT id,user_id FROM card_sources WHERE enabled AND mode='http' AND next_poll<=now() ORDER BY next_poll LIMIT 4")
 			if e != nil {
 				continue

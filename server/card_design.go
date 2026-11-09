@@ -8,36 +8,73 @@ import (
 )
 
 type CardDesign struct {
-	Version int                   `json:"schema_version"`
-	Name    string                `json:"name"`
-	Family  string                `json:"family"`
-	Theme   string                `json:"theme,omitempty"`
+	Version  int                   `json:"schema_version"`
+	Name     string                `json:"name"`
+	Family   string                `json:"family"`
+	Theme    string                `json:"theme,omitempty"`
+	Layout   LayoutNode            `json:"layout"`
+	Layouts  map[string]LayoutNode `json:"layouts,omitempty"`
+	Fallback *CardFallback         `json:"fallback,omitempty"`
+}
+type CardFallback struct {
 	Layout  LayoutNode            `json:"layout"`
 	Layouts map[string]LayoutNode `json:"layouts,omitempty"`
 }
+type ColorPair struct {
+	Light string `json:"light"`
+	Dark  string `json:"dark"`
+}
+type NodeStateStyle struct {
+	Text             *string    `json:"text,omitempty"`
+	Color            string     `json:"color,omitempty"`
+	Colors           *ColorPair `json:"colors,omitempty"`
+	Background       string     `json:"background,omitempty"`
+	BackgroundColors *ColorPair `json:"background_colors,omitempty"`
+}
+type NodeBorder struct {
+	Color  string     `json:"color,omitempty"`
+	Colors *ColorPair `json:"colors,omitempty"`
+	Width  int        `json:"width"`
+}
 type LayoutNode struct {
-	ID         string       `json:"id"`
-	Type       string       `json:"type"`
-	Text       string       `json:"text,omitempty"`
-	Label      string       `json:"label,omitempty"`
-	Bind       string       `json:"bind,omitempty"`
-	Format     string       `json:"format,omitempty"`
-	Decimals   *int         `json:"decimals,omitempty"`
-	ColorRule  string       `json:"color_rule,omitempty"`
-	Color      string       `json:"color,omitempty"`
-	Background string       `json:"background,omitempty"`
-	FontSize   int          `json:"font_size,omitempty"`
-	Weight     string       `json:"weight,omitempty"`
-	Alignment  string       `json:"alignment,omitempty"`
-	Spacing    *int         `json:"spacing,omitempty"`
-	Padding    int          `json:"padding,omitempty"`
-	Radius     int          `json:"radius,omitempty"`
-	Flex       *int         `json:"flex,omitempty"`
-	Columns    int          `json:"columns,omitempty"`
-	Limit      int          `json:"limit,omitempty"`
-	Source     string       `json:"source,omitempty"`
-	Children   []LayoutNode `json:"children,omitempty"`
-	Row        *LayoutNode  `json:"row,omitempty"`
+	VisibleWhen      string                    `json:"visible_when,omitempty"`
+	HideIfEmpty      bool                      `json:"hide_if_empty,omitempty"`
+	Colors           *ColorPair                `json:"colors,omitempty"`
+	BackgroundColors *ColorPair                `json:"background_colors,omitempty"`
+	States           map[string]NodeStateStyle `json:"states,omitempty"`
+	UnknownState     *NodeStateStyle           `json:"unknown_state,omitempty"`
+	Border           *NodeBorder               `json:"border,omitempty"`
+	Prefix           string                    `json:"prefix,omitempty"`
+	Suffix           string                    `json:"suffix,omitempty"`
+	Symbol           string                    `json:"symbol,omitempty"`
+	ImageURL         string                    `json:"image_url,omitempty"`
+	IconSize         int                       `json:"icon_size,omitempty"`
+	ChartStyle       string                    `json:"chart_style,omitempty"`
+	Height           int                       `json:"height,omitempty"`
+	MinPoints        int                       `json:"min_points,omitempty"`
+	GapSeconds       int                       `json:"gap_seconds,omitempty"`
+	ID               string                    `json:"id"`
+	Type             string                    `json:"type"`
+	Text             string                    `json:"text,omitempty"`
+	Label            string                    `json:"label,omitempty"`
+	Bind             string                    `json:"bind,omitempty"`
+	Format           string                    `json:"format,omitempty"`
+	Decimals         *int                      `json:"decimals,omitempty"`
+	ColorRule        string                    `json:"color_rule,omitempty"`
+	Color            string                    `json:"color,omitempty"`
+	Background       string                    `json:"background,omitempty"`
+	FontSize         int                       `json:"font_size,omitempty"`
+	Weight           string                    `json:"weight,omitempty"`
+	Alignment        string                    `json:"alignment,omitempty"`
+	Spacing          *int                      `json:"spacing,omitempty"`
+	Padding          int                       `json:"padding,omitempty"`
+	Radius           int                       `json:"radius,omitempty"`
+	Flex             *int                      `json:"flex,omitempty"`
+	Columns          int                       `json:"columns,omitempty"`
+	Limit            int                       `json:"limit,omitempty"`
+	Source           string                    `json:"source,omitempty"`
+	Children         []LayoutNode              `json:"children,omitempty"`
+	Row              *LayoutNode               `json:"row,omitempty"`
 }
 
 var nodeID = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_-]{0,63}$`)
@@ -47,7 +84,7 @@ var hexColor = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
 func validColor(s string) bool {
 	return s == "" || contains([]string{"primary", "secondary", "accent"}, s) || hexColor.MatchString(s)
 }
-func validateDesign(raw []byte) (CardDesign, error) {
+func validateLegacyDesign(raw []byte) (CardDesign, error) {
 	var d CardDesign
 	fail := func(path, msg string) (CardDesign, error) { return d, bad("invalid_design", path+": "+msg) }
 	if len(raw) > 65536 {
@@ -71,7 +108,7 @@ func validateDesign(raw []byte) (CardDesign, error) {
 		legacy := d
 		legacy.Version = 1
 		legacy.Layouts = nil
-		if _, e := validateDesign(canonical(legacy)); e != nil {
+		if _, e := validateLegacyDesign(canonical(legacy)); e != nil {
 			return fail("$.layout", "默认布局不兼容旧客户端："+e.Error())
 		}
 		for family, layout := range d.Layouts {
@@ -80,7 +117,7 @@ func validateDesign(raw []byte) (CardDesign, error) {
 			}
 			variant := legacy
 			variant.Layout = layout
-			if _, e := validateDesign(canonical(variant)); e != nil {
+			if _, e := validateLegacyDesign(canonical(variant)); e != nil {
 				return fail("$.layouts."+family, e.Error())
 			}
 		}

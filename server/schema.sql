@@ -24,3 +24,5 @@ CREATE TABLE IF NOT EXISTS card_sources (id text PRIMARY KEY, user_id text NOT N
 CREATE TABLE IF NOT EXISTS card_templates (id text PRIMARY KEY, user_id text NOT NULL REFERENCES users(id), source_id text NOT NULL REFERENCES card_sources(id), draft jsonb NOT NULL, draft_revision bigint NOT NULL DEFAULT 1, published jsonb, revision bigint NOT NULL DEFAULT 0, updated_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS card_import_codes (hash text PRIMARY KEY, card_id text NOT NULL REFERENCES card_templates(id), expires_at timestamptz NOT NULL, uses integer NOT NULL DEFAULT 0, max_uses integer NOT NULL DEFAULT 10, revoked boolean NOT NULL DEFAULT false);
 CREATE TABLE IF NOT EXISTS card_subscriptions (card_id text NOT NULL REFERENCES card_templates(id), device_id text NOT NULL REFERENCES devices(id), PRIMARY KEY(card_id,device_id));
+
+CREATE TABLE IF NOT EXISTS card_source_history (source_id text PRIMARY KEY REFERENCES card_sources(id) ON DELETE CASCADE, revision bigint NOT NULL DEFAULT 0, rules jsonb NOT NULL DEFAULT '[]', samples jsonb NOT NULL DEFAULT '{}');

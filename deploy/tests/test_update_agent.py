@@ -23,6 +23,19 @@ class UpdateAgentTests(unittest.TestCase):
   if corrupt:data+=b' '
   (self.base/'feed.json').write_text(json.dumps({'manifest':base64.b64encode(data).decode(),'signature':base64.b64encode((self.base/'sig').read_bytes()).decode()}))
  def release(self):return {'version':'1.1.0-rc.2','arch':'amd64' if agent.platform.machine()=='x86_64' else 'arm64','min_server_version':'1.0.0','min_app_version':'1.0.0','backward_compatible':True,'database_compatible':True,'url':self.url+'/bundle.tar.gz','sha256':'1'*64,'size':10,'notes':'Test release'}
+ def test_transient_download_retries_without_bypassing_validation(self):
+  a=agent.Agent(self.config);calls=[]
+  def flaky(*args):
+   calls.append(1)
+   if len(calls)<3:raise agent.urllib.error.URLError('temporary')
+   return b'valid transport bytes'
+  a.download_once=flaky
+  self.assertEqual(a.download(self.url+'/feed.json',1024),b'valid transport bytes');self.assertEqual(len(calls),3)
+  calls.clear()
+  def invalid(*args):calls.append(1);raise agent.UpdateError('Invalid signature or bounds')
+  a.download_once=invalid
+  with self.assertRaises(agent.UpdateError):a.download(self.url+'/feed.json',1024)
+  self.assertEqual(len(calls),1)
  def test_signed_check_pin_and_tamper(self):
   r=self.release();self.feed(r);a=agent.Agent(self.config);s=a.check();self.assertEqual(s['available']['version'],r['version']);self.assertEqual(len(s['available']['release_id']),64)
   with self.assertRaises(agent.UpdateError):a.install('0'*64)

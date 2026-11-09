@@ -336,7 +336,7 @@ export function parseSourceAssistant(
 export function missingBindings(design: Design, state: any): string[] {
   const missing: string[] = [];
   function visit(node: Node, scope: any) {
-    if (node.bind && !node.text) {
+    if (!node.hide_if_empty && !node.visible_when && node.type!=="sparkline" && node.bind && !node.text) {
       const [group, key] = node.bind.split(".");
       if (!scope?.[group]?.[key])
         missing.push((node.label || key || node.id) + " (" + node.bind + ")");
